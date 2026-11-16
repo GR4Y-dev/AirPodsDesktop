@@ -83,6 +83,7 @@ private:
 
     // Noise Control Menu
     QMenu *_noiseControlMenu = new QMenu{tr("Noise Control"), this};
+    QAction *_noiseStatus = new QAction{this};
     QActionGroup *_noiseControlGroup = new QActionGroup{this};
     QAction *_actionNoiseOff = new QAction{tr("Off"), this};
     QAction *_actionNoiseCancellation = new QAction{tr("Noise Cancellation"), this};
@@ -106,10 +107,12 @@ private:
     Core::QuickConnect::Controller &_quickConnect;
     TrayActivationState _trayActivationState;
     QTimer _singleClickTimer{this};
+    QTimer _noiseRefreshTimer{this};
 
     void ShowMainWindow();
     void Repaint();
     void SetupNoiseControlMenu();
+    void RefreshNoiseControl();
     void UpdateNoiseControlMenuState();
     void ExecuteTrayActivation(TrayActivationAction action);
 

@@ -1,20 +1,26 @@
+> **GR4Y-dev development fork - not yet hardware validated.**
+> Based on [SpriteOvO/AirPodsDesktop](https://github.com/SpriteOvO/AirPodsDesktop) and
+> [YimingZhanshen/AirPodsWindows](https://github.com/YimingZhanshen/AirPodsWindows).
+> Includes Pro 3 listening-mode controls. A compatible MagicAAP driver is required.
+> See [fork status and validation](Docs/Fork.md). Original copyrights and GPL license are retained.
+
 <h1 align="center">
-    <a href="https://github.com/YimingZhanshen/AirPodsWindows"><img src="/Source/Resource/Image/Icon.svg" alt="Icon" width="128"></a>
+    <a href="https://github.com/GR4Y-dev/AirPodsDesktop"><img src="/Source/Resource/Image/Icon.svg" alt="Icon" width="128"></a>
     <br>
     AirPodsWindows
 </h1>
 <p align="center">AirPods 桌面用户体验增强程序 - Windows 平台完整 ANC 控制支持</p>
 <p align="center">
-    <a href="https://github.com/YimingZhanshen/AirPodsWindows/actions/workflows/windows.yml">
-        <img src="https://github.com/YimingZhanshen/AirPodsWindows/actions/workflows/windows.yml/badge.svg"/>
+    <a href="https://github.com/GR4Y-dev/AirPodsDesktop/actions/workflows/windows.yml">
+        <img src="https://github.com/GR4Y-dev/AirPodsDesktop/actions/workflows/windows.yml/badge.svg"/>
     </a>
-    <a href="https://github.com/YimingZhanshen/AirPodsWindows/releases">
-        <img src="https://img.shields.io/github/v/release/YimingZhanshen/AirPodsWindows?include_prereleases"/>
+    <a href="https://github.com/GR4Y-dev/AirPodsDesktop/releases">
+        <img src="https://img.shields.io/github/v/release/GR4Y-dev/AirPodsDesktop?include_prereleases"/>
     </a>
-    <a href="https://github.com/YimingZhanshen/AirPodsWindows/releases">
-        <img src="https://img.shields.io/github/downloads/YimingZhanshen/AirPodsWindows/total.svg"/>
+    <a href="https://github.com/GR4Y-dev/AirPodsDesktop/releases">
+        <img src="https://img.shields.io/github/downloads/GR4Y-dev/AirPodsDesktop/total.svg"/>
     </a>
-    <a href="https://github.com/YimingZhanshen/AirPodsWindows/compare">
+    <a href="https://github.com/GR4Y-dev/AirPodsDesktop/compare">
         <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"/>
     </a>
     <a href="/LICENSE">
@@ -39,7 +45,7 @@
 | 对话感知 **+ 说话音量降低滑条** | ❌ | ✅ |
 | 个性化音量 · 响亮声音降低 · 自适应通透级别 | ❌ | ✅ |
 | 托盘降噪菜单 | ❌ | ✅ |
-| 发布与程序内更新指向 | `SpriteOvO/AirPodsDesktop` | **`YimingZhanshen/AirPodsWindows`** |
+| 发布与程序内更新指向 | `SpriteOvO/AirPodsDesktop` | **`GR4Y-dev/AirPodsDesktop`** |
 | 本构建的 Issue 跟踪 | 上游仓库 | 本仓库 |
 | 技术基线 | 0.6.1 起 Qt 6.8.3、仅 x64 | 与上游保持同步 |
 
@@ -77,7 +83,7 @@ ANC 控制另外需要 [MagicAAP 驱动](https://magicpods.app/magicaap/)，且�
 
 ## 📦 安装
 
-1. 从 [Releases](https://github.com/YimingZhanshen/AirPodsWindows/releases) 下载最新版本
+1. 从 [Releases](https://github.com/GR4Y-dev/AirPodsDesktop/releases) 下载最新版本
 2. 运行安装程序或解压便携版
 3. （可选）安装 MagicAAP 驱动以启用 ANC 控制功能 —— [完整安装步骤见 Docs/Driver.md](/Docs/Driver.md)
 
@@ -89,8 +95,8 @@ Windows 环境要求、构建命令与测试方式请参阅[构建说明](/Docs/
 
 *AirPodsWindows* 是一个开源项目，您可以通过以下方式贡献：
 
-* [打开问题](https://github.com/YimingZhanshen/AirPodsWindows/issues/new/choose) 来报告错误或建议新功能。
-* [提交 PR](https://github.com/YimingZhanshen/AirPodsWindows/compare) 来修复错误、改进文档或添加功能。
+* [打开问题](https://github.com/GR4Y-dev/AirPodsDesktop/issues/new/choose) 来报告错误或建议新功能。
+* [提交 PR](https://github.com/GR4Y-dev/AirPodsDesktop/compare) 来修复错误、改进文档或添加功能。
 * [翻译到其他语言](/CONTRIBUTING.md#-translation-guide) 或 [改进现有的翻译](/CONTRIBUTING.md#-translation-guide)。
 
 更新项目文档时，请保持 `README.md`、`README-CN.md` 与 `README-TW.md` 的章节顺序、功能、命令、链接及致谢内容一致。

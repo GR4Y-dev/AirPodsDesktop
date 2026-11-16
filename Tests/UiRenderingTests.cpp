@@ -131,6 +131,48 @@ class UiRenderingTests : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
+    void NoiseMenuRequiresConnectionAndClearsStaleSelection()
+    {
+        auto backend = std::make_shared<Core::QuickConnect::NullBackend>();
+        Core::QuickConnect::Controller quickConnect{backend};
+        Gui::TrayIcon tray{[] { return 0; }, quickConnect};
+        auto *menu = tray.findChild<QMenu *>("noiseControlMenu");
+        QVERIFY(menu != nullptr);
+        QVERIFY(!menu->menuAction()->isVisible());
+        Core::AirPods::State state;
+        state.model = Core::AirPods::Model::AirPods_Pro_3;
+        tray.UpdateState(state);
+        QVERIFY(menu->menuAction()->isVisible());
+        int modes = 0;
+        for (auto *action : menu->actions()) {
+            if (action->isCheckable()) {
+                ++modes;
+                QVERIFY(action->isVisible());
+                QVERIFY(!action->isEnabled());
+                QVERIFY(!action->isChecked());
+            }
+        }
+        QCOMPARE(modes, 4);
+        tray.UpdateNoiseControlMode(Core::AAP::NoiseControlMode::Adaptive);
+        tray.Unavailable();
+        QVERIFY(!menu->menuAction()->isVisible());
+        for (auto *action : menu->actions()) {
+            QVERIFY(!action->isChecked());
+        }
+        state.model = Core::AirPods::Model::AirPods_Pro;
+        tray.UpdateState(state);
+        int visibleModes = 0;
+        for (auto *action : menu->actions()) {
+            visibleModes += action->isCheckable() && action->isVisible();
+        }
+        QCOMPARE(visibleModes, 3);
+        tray.Disconnect();
+        QVERIFY(!menu->menuAction()->isVisible());
+        tray.UpdateState(state);
+        tray.Unbind();
+        QVERIFY(!menu->menuAction()->isVisible());
+    }
+
     void MainWindowRendersAirPods5()
     {
         Core::AirPods::State state;

@@ -1,20 +1,26 @@
+> **GR4Y-dev development fork - not yet hardware validated.**
+> Based on [SpriteOvO/AirPodsDesktop](https://github.com/SpriteOvO/AirPodsDesktop) and
+> [YimingZhanshen/AirPodsWindows](https://github.com/YimingZhanshen/AirPodsWindows).
+> Includes Pro 3 listening-mode controls. A compatible MagicAAP driver is required.
+> See [fork status and validation](Docs/Fork.md). Original copyrights and GPL license are retained.
+
 <h1 align="center">
-    <a href="https://github.com/YimingZhanshen/AirPodsWindows"><img src="/Source/Resource/Image/Icon.svg" alt="Icon" width="128"></a>
+    <a href="https://github.com/GR4Y-dev/AirPodsDesktop"><img src="/Source/Resource/Image/Icon.svg" alt="Icon" width="128"></a>
     <br>
     AirPodsWindows
 </h1>
 <p align="center">AirPods desktop user experience enhancement program - Full ANC control on Windows</p>
 <p align="center">
-    <a href="https://github.com/YimingZhanshen/AirPodsWindows/actions/workflows/windows.yml">
-        <img src="https://github.com/YimingZhanshen/AirPodsWindows/actions/workflows/windows.yml/badge.svg"/>
+    <a href="https://github.com/GR4Y-dev/AirPodsDesktop/actions/workflows/windows.yml">
+        <img src="https://github.com/GR4Y-dev/AirPodsDesktop/actions/workflows/windows.yml/badge.svg"/>
     </a>
-    <a href="https://github.com/YimingZhanshen/AirPodsWindows/releases">
-        <img src="https://img.shields.io/github/v/release/YimingZhanshen/AirPodsWindows?include_prereleases"/>
+    <a href="https://github.com/GR4Y-dev/AirPodsDesktop/releases">
+        <img src="https://img.shields.io/github/v/release/GR4Y-dev/AirPodsDesktop?include_prereleases"/>
     </a>
-    <a href="https://github.com/YimingZhanshen/AirPodsWindows/releases">
-        <img src="https://img.shields.io/github/downloads/YimingZhanshen/AirPodsWindows/total.svg"/>
+    <a href="https://github.com/GR4Y-dev/AirPodsDesktop/releases">
+        <img src="https://img.shields.io/github/downloads/GR4Y-dev/AirPodsDesktop/total.svg"/>
     </a>
-    <a href="https://github.com/YimingZhanshen/AirPodsWindows/compare">
+    <a href="https://github.com/GR4Y-dev/AirPodsDesktop/compare">
         <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"/>
     </a>
     <a href="/LICENSE">
@@ -40,7 +46,7 @@
 | Conversational awareness **+ speaking-volume reduction slider** | ❌ | ✅ |
 | Personalized volume · loud-sound reduction · adaptive transparency level | ❌ | ✅ |
 | Tray noise-control menu | ❌ | ✅ |
-| Releases & in-app updater point to | `SpriteOvO/AirPodsDesktop` | **`YimingZhanshen/AirPodsWindows`** |
+| Releases & in-app updater point to | `SpriteOvO/AirPodsDesktop` | **`GR4Y-dev/AirPodsDesktop`** |
 | Issue tracker for this build | upstream issues | this repository |
 | Base line | Qt 6.8.3, x64 only (since 0.6.1) | kept in sync with upstream |
 
@@ -81,7 +87,7 @@ applies to AirPods Pro / Max / AirPods 4 (ANC).
 
 ## 📦 Installation
 
-1. Download the latest version from [Releases](https://github.com/YimingZhanshen/AirPodsWindows/releases)
+1. Download the latest version from [Releases](https://github.com/GR4Y-dev/AirPodsDesktop/releases)
 2. Run the installer or extract the portable version
 3. (Optional) Install the MagicAAP driver to enable ANC control features — [see Docs/Driver.md for full installation instructions](/Docs/Driver.md)
 
@@ -93,8 +99,8 @@ See the [Build Instructions](/Docs/Build.md) for Windows prerequisites, build co
 
 *AirPodsWindows* is an open source project, here are some ways you can contribute:
 
-* [Open an issue](https://github.com/YimingZhanshen/AirPodsWindows/issues/new/choose) to report bugs or suggest new features.
-* [Submit a PR](https://github.com/YimingZhanshen/AirPodsWindows/compare) to fix bugs, improve documentation, or add features.
+* [Open an issue](https://github.com/GR4Y-dev/AirPodsDesktop/issues/new/choose) to report bugs or suggest new features.
+* [Submit a PR](https://github.com/GR4Y-dev/AirPodsDesktop/compare) to fix bugs, improve documentation, or add features.
 * [Translate to other languages](/CONTRIBUTING.md#-translation-guide) or [improve existing translations](/CONTRIBUTING.md#-translation-guide).
 
 Keep `README.md`, `README-CN.md`, and `README-TW.md` aligned in section order, features, commands, links, and credits when updating project documentation.

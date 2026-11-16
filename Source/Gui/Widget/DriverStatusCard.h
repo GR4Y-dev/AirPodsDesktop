@@ -77,7 +77,7 @@ private:
     QLabel *_titleLabel = new QLabel{this};
     QLabel *_descLabel = new QLabel{this};
     QLabel *_detailLabel = new QLabel{this};
-    QPushButton *_copyButton = new QPushButton{tr("Copy install command"), this};
+    QPushButton *_copyButton = new QPushButton{tr("Copy driver documentation link"), this};
     QPushButton *_docsButton = new QPushButton{tr("Open documentation"), this};
     QPushButton *_exportButton = new QPushButton{tr("Export diagnostics"), this};
 

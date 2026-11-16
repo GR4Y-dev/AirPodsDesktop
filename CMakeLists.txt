@@ -26,10 +26,10 @@ if (POLICY CMP0177)
     cmake_policy(SET CMP0177 NEW)
 endif()
 
-set(APD_GITHUB_OWNER "YimingZhanshen" CACHE STRING "GitHub repository owner used by the updater.")
+set(APD_GITHUB_OWNER "GR4Y-dev" CACHE STRING "GitHub repository owner used by the updater.")
 set(
     APD_GITHUB_REPOSITORY
-    "AirPodsWindows"
+    "AirPodsDesktop"
     CACHE STRING
     "GitHub repository name used by the updater."
 )

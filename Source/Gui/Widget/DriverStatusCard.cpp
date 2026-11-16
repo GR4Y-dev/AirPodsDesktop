@@ -28,10 +28,8 @@ namespace Gui {
 
 namespace {
 
-// Installation command mirrors Docs/Driver.md; the driver is maintained by the
-// MagicPods project, this app only depends on the interface.
-constexpr const char *kInstallCommand =
-    "irm \"https://magicpods.app/utils/magicaap-community-v1.ps1\" | iex";
+// Link to current guidance instead of copying an executable installation script.
+constexpr const char *kDriverUrl = "https://magicpods.app/magicaap/";
 
 } // namespace
 
@@ -75,7 +73,7 @@ DriverStatusCard::DriverStatusCard(QWidget *parent) : QFrame{parent}
 
     connect(_copyButton, &QPushButton::clicked, this, [this] {
         if (auto *clipboard = QGuiApplication::clipboard(); clipboard != nullptr) {
-            clipboard->setText(QString::fromUtf8(kInstallCommand));
+            clipboard->setText(QString::fromUtf8(kDriverUrl));
         }
         emit CopyInstallCommandRequested();
     });
@@ -116,7 +114,7 @@ QString DriverStatusCard::StatusDetailText(
         case LinkStatus::NotInstalled:
             return QObject::tr(
                 "Install the driver to unlock ANC control, loud sound reduction and other "
-                "AAP features. Copy the install command or open the documentation.");
+                "AAP features. Open the documentation to review driver requirements.");
         case LinkStatus::InstalledNotConnected: {
             if (lastFailure == Core::AAP::ConnectFailure::None) {
                 return QObject::tr("Open the earbud case near this computer to connect.");

@@ -66,6 +66,15 @@ TrayIcon::TrayIcon(
 
     // Setup noise control menu
     SetupNoiseControlMenu();
+    connect(_menu, &QMenu::aboutToShow, this, &TrayIcon::RefreshNoiseControl);
+    connect(_noiseControlMenu, &QMenu::aboutToShow, this, &TrayIcon::RefreshNoiseControl);
+    _noiseRefreshTimer.setInterval(500);
+    connect(&_noiseRefreshTimer, &QTimer::timeout, this, [this] {
+        if (_noiseControlMenu->isVisible()) {
+            RefreshNoiseControl();
+        }
+    });
+    _noiseRefreshTimer.start();
 
     _menu->addAction(_actionNewVersion);
     _menu->addSeparator();
@@ -88,11 +97,17 @@ TrayIcon::TrayIcon(
 void TrayIcon::SetAirPodsManagerProvider(
     std::function<Core::AirPods::Manager &()> getAirPodsManager)
 {
+    _getAirPodsManager = getAirPodsManager;
     _settingsWindow.SetAirPodsManagerProvider(std::move(getAirPodsManager));
 }
 
 void TrayIcon::SetupNoiseControlMenu()
 {
+    _noiseControlMenu->setObjectName("noiseControlMenu");
+    Theme::ConfigurePopupSurface(_noiseControlMenu);
+    _noiseStatus->setEnabled(false);
+    _noiseControlMenu->addAction(_noiseStatus);
+    _noiseControlMenu->addSeparator();
     // Make actions checkable
     _actionNoiseOff->setCheckable(true);
     _actionNoiseCancellation->setCheckable(true);
@@ -128,30 +143,51 @@ void TrayIcon::SetupNoiseControlMenu()
 
 void TrayIcon::OnNoiseControlModeSelected(Core::AAP::NoiseControlMode mode)
 {
-    if (!_getAirPodsManager) {
-        LOG(Warn, "Noise control mode selected without an AirPods manager; ignoring.");
+    // QAction checks itself before this handler. Restore the last device-reported
+    // mode immediately; a successful write is not a device acknowledgement.
+    RefreshNoiseControl();
+    if (!_getAirPodsManager || !_getAirPodsManager().IsAAPConnected() ||
+        !_airPodsState || !Core::AirPods::Manager::SupportsANC(_airPodsState->model)) {
         return;
     }
-    auto &apdMgr = _getAirPodsManager();
-    
-    // Save the previous mode to revert on failure
-    auto previousMode = _currentNoiseMode;
-    
-    if (apdMgr.SetNoiseControlMode(mode)) {
-        _currentNoiseMode = mode;
-        UpdateNoiseControlMenuState();
-    } else {
-        // Revert the menu to the previous state on failure
-        if (previousMode.has_value()) {
-            _currentNoiseMode = previousMode;
-            UpdateNoiseControlMenuState();
-        }
-        LOG(Warn, "Failed to set noise control mode");
+    if (!_getAirPodsManager().SetNoiseControlMode(mode)) {
+        ShowMessage(tr("Noise Control"),
+            tr("Could not send the listening mode. Check the driver connection in Settings."),
+            QSystemTrayIcon::Warning);
     }
+    RefreshNoiseControl();
+}
+
+void TrayIcon::RefreshNoiseControl()
+{
+    const bool supported = _airPodsState &&
+        Core::AirPods::Manager::SupportsANC(_airPodsState->model);
+    const bool connected = supported && _getAirPodsManager &&
+        _getAirPodsManager().IsAAPConnected();
+    _noiseControlMenu->menuAction()->setVisible(supported);
+    _noiseStatus->setText(connected ? tr("Connected") : tr("Connect the AAP driver in Settings"));
+    _noiseStatus->setVisible(!connected);
+    for (auto *action : _noiseControlGroup->actions()) {
+        action->setEnabled(connected);
+    }
+    using Model = Core::AirPods::Model;
+    const bool adaptive = supported &&
+        (_airPodsState->model == Model::AirPods_Pro_2 ||
+         _airPodsState->model == Model::AirPods_Pro_2_USB_C ||
+         _airPodsState->model == Model::AirPods_Pro_3 ||
+         _airPodsState->model == Model::AirPods_4_ANC);
+    _actionAdaptive->setVisible(adaptive);
+    _currentNoiseMode = connected ? _getAirPodsManager().GetNoiseControlMode() : std::nullopt;
+    UpdateNoiseControlMenuState();
 }
 
 void TrayIcon::UpdateNoiseControlMenuState()
 {
+    _noiseControlGroup->setExclusive(false);
+    for (auto *action : _noiseControlGroup->actions()) {
+        action->setChecked(false);
+    }
+    _noiseControlGroup->setExclusive(true);
     if (!_currentNoiseMode.has_value()) {
         return;
     }
@@ -185,16 +221,8 @@ void TrayIcon::UpdateState(const Core::AirPods::State &state)
     _status = Status::Updating;
     _airPodsState = state;
     
-    // Show noise control menu for ANC-capable devices
-    bool supportsANC = Core::AirPods::Manager::SupportsANC(state.model);
-    _noiseControlMenu->menuAction()->setVisible(supportsANC);
-    
-    // Update noise control mode if available from state
-    if (state.noiseControlMode.has_value()) {
-        _currentNoiseMode = state.noiseControlMode;
-        UpdateNoiseControlMenuState();
-    }
-    
+    RefreshNoiseControl();
+
     Repaint();
 }
 
@@ -202,6 +230,7 @@ void TrayIcon::Unavailable()
 {
     _status = Status::Unavailable;
     _airPodsState.reset();
+    RefreshNoiseControl();
     Repaint();
 }
 
@@ -215,6 +244,7 @@ void TrayIcon::Disconnect()
 
     _status = Status::Disconnected;
     _airPodsState.reset();
+    RefreshNoiseControl();
     _currentNoiseMode.reset();
     _noiseControlMenu->menuAction()->setVisible(false);
     Repaint();
@@ -224,6 +254,7 @@ void TrayIcon::Unbind()
 {
     _status = Status::Unbind;
     _airPodsState.reset();
+    RefreshNoiseControl();
     _currentNoiseMode.reset();
     _noiseControlMenu->menuAction()->setVisible(false);
     Repaint();
