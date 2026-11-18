@@ -288,6 +288,15 @@ jobs:
             }
           }
 
+      - name: Upload UI validation images
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: UI-validation-${{ github.sha }}
+          path: Build/Release/UiValidation/*.png
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
         with:
