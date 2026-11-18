@@ -39,3 +39,11 @@ Before releasing, test with real Pro 3 hardware:
 
 Updater defaults target GR4Y-dev/AirPodsDesktop. CI supplies its repository owner
 and name dynamically. Pushing a development branch is not a validated release.
+
+## Icon panel
+
+Noise Control now uses four labeled icon tiles with keyboard focus and a highlighted
+reported selection. Without an AAP connection it explicitly says Current mode
+unavailable. BLE battery broadcasts parsed by this app contain no listening-mode
+field, so audio connection alone cannot supply a trustworthy mode indication.
+The panel does not infer a mode from battery, stem presses, or the last command.

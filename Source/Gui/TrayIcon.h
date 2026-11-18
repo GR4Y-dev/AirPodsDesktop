@@ -25,6 +25,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QActionGroup>
+#include <QLabel>
 
 #include "../Core/AirPods.h"
 #include "../Core/AAP.h"
@@ -83,7 +84,7 @@ private:
 
     // Noise Control Menu
     QMenu *_noiseControlMenu = new QMenu{tr("Noise Control"), this};
-    QAction *_noiseStatus = new QAction{this};
+    QLabel *_noiseStatus = new QLabel;
     QActionGroup *_noiseControlGroup = new QActionGroup{this};
     QAction *_actionNoiseOff = new QAction{tr("Off"), this};
     QAction *_actionNoiseCancellation = new QAction{tr("Noise Cancellation"), this};
