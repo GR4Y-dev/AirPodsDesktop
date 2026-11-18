@@ -200,20 +200,28 @@ void TrayIcon::SetupNoiseControlMenu()
     int iconIndex = 0;
     for (auto *action : _noiseControlGroup->actions()) {
         action->setIcon(ListeningModeIcon(iconIndex++));
-        auto *button = new QToolButton(panel);
+        auto *column = new QWidget(panel);
+        auto *columnLayout = new QVBoxLayout(column);
+        columnLayout->setContentsMargins(0, 0, 0, 0);
+        columnLayout->setSpacing(6);
+        auto *button = new QToolButton(column);
         button->setDefaultAction(action);
-        button->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+        button->setToolButtonStyle(Qt::ToolButtonIconOnly);
         button->setIconSize(QSize(32, 32));
-        button->setMinimumSize(90, 88);
+        button->setFixedSize(90, 64);
         button->setFocusPolicy(Qt::StrongFocus);
         button->setAccessibleName(action->text());
-        if (action == _actionNoiseCancellation) {
-            button->setText(tr("Noise\nCancellation"));
-        }
-        connect(action, &QAction::changed, button, [button, action] {
-            button->setVisible(action->isVisible());
+        auto *label = new QLabel(action->text(), column);
+        label->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
+        label->setWordWrap(true);
+        label->setFixedWidth(90);
+        label->setMinimumHeight(40);
+        columnLayout->addWidget(button);
+        columnLayout->addWidget(label);
+        connect(action, &QAction::changed, column, [column, action] {
+            column->setVisible(action->isVisible());
         });
-        row->addWidget(button);
+        row->addWidget(column);
     }
 
     // Connect signals
