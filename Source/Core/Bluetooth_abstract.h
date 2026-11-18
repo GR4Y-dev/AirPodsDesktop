@@ -1,5 +1,5 @@
 //
-// AirPodsDesktop - AirPods Desktop User Experience Enhancement Program.
+// AirPodsWindows - AirPods Desktop User Experience Enhancement Program.
 // Copyright (C) 2021-2022 SpriteOvO
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,6 +19,7 @@
 #pragma once
 
 #include <functional>
+#include <optional>
 
 #include "../Helper.h"
 
@@ -45,6 +46,7 @@ public:
     virtual std::string GetName() const = 0;
     virtual uint16_t GetProductId() const = 0;
     virtual uint16_t GetVendorId() const = 0;
+    virtual std::optional<std::string> GetModelNumber() const = 0;
     virtual DeviceState GetConnectionState() const = 0;
 
     inline auto &CbConnectionStatusChanged()

@@ -1,5 +1,5 @@
 //
-// AirPodsDesktop - AirPods Desktop User Experience Enhancement Program.
+// AirPodsWindows - AirPods Desktop User Experience Enhancement Program.
 // Copyright (C) 2021-2022 SpriteOvO
 //
 // This program is free software: you can redistribute it and/or modify
@@ -76,9 +76,14 @@ protected:
 public:
     void Play() override;
     void Pause() override;
+    void SetVolume(int percent);
+    int GetVolume() const;
+    void ClearVolumeReductionState();  // Explicitly clear saved volume state
 
 private:
     std::mutex _mutex;
     std::vector<std::unique_ptr<Details::MediaProgramAbstract>> _pausedPrograms;
+    int _savedVolume{0};  // Saved volume before reduction; 0 means no active reduction
+    bool _inReductionSession{false};  // Track if we're currently in a volume reduction session
 };
 } // namespace Core::GlobalMedia

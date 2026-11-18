@@ -1,5 +1,5 @@
 //
-// AirPodsDesktop - AirPods Desktop User Experience Enhancement Program.
+// AirPodsWindows - AirPods Desktop User Experience Enhancement Program.
 // Copyright (C) 2021-2022 SpriteOvO
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,6 +19,7 @@
 #include "Opts.h"
 
 #include <format>
+#include <iostream>
 #include <numeric>
 
 #include <QLocale>
@@ -77,7 +78,7 @@ const LaunchOpts &LaunchOptsManager::Parse(int argc, char *argv[])
 
         return _opts;
     }
-    catch (cxxopts::OptionException &exception) {
+    catch (cxxopts::exceptions::exception &exception) {
         FatalError(std::format("Parse options failed.\n\n{}", exception.what()), false);
         std::exit(1);
     }

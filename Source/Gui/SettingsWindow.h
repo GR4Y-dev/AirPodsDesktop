@@ -1,5 +1,5 @@
 //
-// AirPodsDesktop - AirPods Desktop User Experience Enhancement Program.
+// AirPodsWindows - AirPods Desktop User Experience Enhancement Program.
 // Copyright (C) 2021-2022 SpriteOvO
 //
 // This program is free software: you can redistribute it and/or modify
@@ -29,6 +29,10 @@
 #include "../Core/QuickConnect.h"
 #include "../Core/Settings.h"
 #include "Utils.h"
+// Full definition needed: the language-change lambda below calls
+// DriverStatusCard::Refresh(), and the constructor signature names
+// Core::AirPods::Manager.
+#include "Widget/DriverStatusCard.h"
 
 #include "ui_SettingsWindow.h"
 
@@ -43,8 +47,15 @@ class SettingsWindow : public QDialog
 public:
     explicit SettingsWindow(
         std::function<int()> getCurrentLocaleIndex, Core::QuickConnect::Controller &quickConnect,
-        QWidget *parent = nullptr);
+        std::function<Core::AirPods::Manager &()> getAirPodsManager = {}, QWidget *parent = nullptr);
     void SetLowAudioLatencyChecked(bool checked);
+
+    // Installs the application's AirPods manager into the driver status card.
+    // MUST run after the manager is created: the tray icon builds this window
+    // before ApdApplication creates the manager, so resolving it during
+    // construction dereferences a null pointer (hardware-found startup crash;
+    // unit tests pass no provider and never hit the path).
+    void SetAirPodsManagerProvider(std::function<Core::AirPods::Manager &()> getAirPodsManager);
 
     int GetTabCount() const;
     int GetTabCurrentIndex() const;
@@ -58,8 +69,12 @@ private:
     QString _aboutTextTemplate;
     std::function<int()> _getCurrentLocaleIndex;
     Core::QuickConnect::Controller &_quickConnect;
+    std::function<Core::AirPods::Manager &()> _getAirPodsManager;
+    DriverStatusCard *_driverStatusCard{nullptr};
+    bool _driverCardSignalConnected{false};
 
     void InitCreditsText();
+    void SetupDriverStatusCard();
     void RestoreDefaults();
     void Update(const Fields &fields, bool trigger);
     void UpdateQuickConnectDevices(const Fields &fields);
@@ -84,6 +99,12 @@ private:
     void On_cbTrayQuickConnectEnabled_toggled(bool checked);
     void On_cbTrayQuickConnectDevice_currentIndexChanged(int index);
     void On_cbAutoEarDetection_toggled(bool checked);
+    void On_cbConversationalAwareness_toggled(bool checked);
+    void On_sliderConversationalAwarenessVolume_valueChanged(int value);
+    void On_cbPersonalizedVolume_toggled(bool checked);
+    void On_cbLoudSoundReduction_toggled(bool checked);
+    void On_cbNoiseControlMode_currentIndexChanged(int index);
+    void On_hsAdaptiveTransparencyLevel_valueChanged(int value);
     void On_hsMaxReceivingRange_valueChanged(int value);
 
     // About
@@ -103,6 +124,9 @@ private:
         _aboutTextTemplate = _ui.label->text();
         InitCreditsText();
         UpdateDescriptions();
+        if (_driverStatusCard != nullptr) {
+            _driverStatusCard->Refresh();
+        }
         // QDialogButtonBox handles LanguageChange after its parent and resets standard-button
         // labels to Qt's platform text. Apply our app translations once propagation ends.
         QTimer::singleShot(0, this, [this] { UpdateStandardButtonTexts(); });

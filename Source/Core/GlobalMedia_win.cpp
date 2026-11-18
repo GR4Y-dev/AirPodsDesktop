@@ -1,5 +1,5 @@
 //
-// AirPodsDesktop - AirPods Desktop User Experience Enhancement Program.
+// AirPodsWindows - AirPods Desktop User Experience Enhancement Program.
 // Copyright (C) 2021-2022 SpriteOvO
 //
 // This program is free software: you can redistribute it and/or modify
@@ -548,4 +548,158 @@ void Controller::Pause()
         }
     }
 }
+
+void Controller::SetVolume(int percent)
+{
+    std::lock_guard<std::mutex> lock{_mutex};
+    
+    if (percent < 0) percent = 0;
+    if (percent > 100) percent = 100;
+    
+    // Track if we're in "reduced volume" state using _savedVolume as indicator
+    // _savedVolume > 0 means we have a saved volume to restore to
+    bool isReducing = percent < 100;
+    bool hasVolumeReduction = _savedVolume > 0;
+    
+    // Save current volume before reducing
+    // ALWAYS re-read the actual volume to ensure we capture user's manual changes
+    if (isReducing && !_inReductionSession) {
+        // Get actual current volume from the system
+        int currentVolume = 100;
+        try {
+            OS::Windows::Com::UniquePtr<IMMDeviceEnumerator> deviceEnumerator;
+            HRESULT result = CoCreateInstance(
+                __uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, deviceEnumerator.GetIID(),
+                (void **)deviceEnumerator.ReleaseAndAddressOf());
+            if (SUCCEEDED(result)) {
+                OS::Windows::Com::UniquePtr<IMMDevice> audioEndpoint;
+                result = deviceEnumerator->GetDefaultAudioEndpoint(
+                    eRender, eMultimedia, audioEndpoint.ReleaseAndAddressOf());
+                if (SUCCEEDED(result)) {
+                    OS::Windows::Com::UniquePtr<IAudioEndpointVolume> endpointVolume;
+                    result = audioEndpoint->Activate(
+                        endpointVolume.GetIID(), CLSCTX_ALL, nullptr, (void **)endpointVolume.ReleaseAndAddressOf());
+                    if (SUCCEEDED(result)) {
+                        float volumeLevel = 0.0f;
+                        if (SUCCEEDED(endpointVolume->GetMasterVolumeLevelScalar(&volumeLevel))) {
+                            currentVolume = static_cast<int>(volumeLevel * 100.0f);
+                        }
+                    }
+                }
+            }
+        } catch (...) {}
+        _savedVolume = currentVolume;
+        _inReductionSession = true;
+        LOG(Trace, "SetVolume: Saved current volume {}% before reduction, starting session", _savedVolume);
+    }
+    
+    // Calculate target volume
+    int targetPercent;
+    if (percent == 100 && hasVolumeReduction) {
+        // Restoring - use saved volume
+        // Keep _savedVolume to handle duplicate restoration calls
+        // It will be cleared when the next reduction cycle starts
+        targetPercent = _savedVolume;
+        _inReductionSession = false;
+        LOG(Trace, "SetVolume: Restoring to saved volume {}%, ending session", targetPercent);
+    } else if (isReducing && _savedVolume > 0) {
+        // Reducing - calculate relative to saved volume
+        targetPercent = (percent * _savedVolume) / 100;
+        LOG(Trace, "SetVolume: Reducing to {}% ({}% of saved {}%)", targetPercent, percent, _savedVolume);
+    } else {
+        // No reduction state - just set the percent
+        targetPercent = percent;
+    }
+    
+    try {
+        OS::Windows::Com::UniquePtr<IMMDeviceEnumerator> deviceEnumerator;
+        HRESULT result = CoCreateInstance(
+            __uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, deviceEnumerator.GetIID(),
+            (void **)deviceEnumerator.ReleaseAndAddressOf());
+        if (FAILED(result)) {
+            LOG(Warn, "SetVolume: Create IMMDeviceEnumerator failed. HRESULT: {:#x}", result);
+            return;
+        }
+
+        OS::Windows::Com::UniquePtr<IMMDevice> audioEndpoint;
+        result = deviceEnumerator->GetDefaultAudioEndpoint(
+            eRender, eMultimedia, audioEndpoint.ReleaseAndAddressOf());
+        if (FAILED(result)) {
+            LOG(Warn, "SetVolume: GetDefaultAudioEndpoint failed. HRESULT: {:#x}", result);
+            return;
+        }
+
+        OS::Windows::Com::UniquePtr<IAudioEndpointVolume> endpointVolume;
+        result = audioEndpoint->Activate(
+            endpointVolume.GetIID(), CLSCTX_ALL, nullptr, (void **)endpointVolume.ReleaseAndAddressOf());
+        if (FAILED(result)) {
+            LOG(Warn, "SetVolume: Activate IAudioEndpointVolume failed. HRESULT: {:#x}", result);
+            return;
+        }
+
+        float volumeLevel = static_cast<float>(targetPercent) / 100.0f;
+        result = endpointVolume->SetMasterVolumeLevelScalar(volumeLevel, nullptr);
+        if (FAILED(result)) {
+            LOG(Warn, "SetVolume: SetMasterVolumeLevelScalar failed. HRESULT: {:#x}", result);
+            return;
+        }
+        
+        LOG(Trace, "SetVolume: Volume set to {}%", targetPercent);
+    }
+    catch (const std::exception &ex) {
+        LOG(Warn, "SetVolume: Exception: {}", ex.what());
+    }
+}
+
+int Controller::GetVolume() const
+{
+    try {
+        OS::Windows::Com::UniquePtr<IMMDeviceEnumerator> deviceEnumerator;
+        HRESULT result = CoCreateInstance(
+            __uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, deviceEnumerator.GetIID(),
+            (void **)deviceEnumerator.ReleaseAndAddressOf());
+        if (FAILED(result)) {
+            LOG(Warn, "GetVolume: Create IMMDeviceEnumerator failed. HRESULT: {:#x}", result);
+            return 100;
+        }
+
+        OS::Windows::Com::UniquePtr<IMMDevice> audioEndpoint;
+        result = deviceEnumerator->GetDefaultAudioEndpoint(
+            eRender, eMultimedia, audioEndpoint.ReleaseAndAddressOf());
+        if (FAILED(result)) {
+            LOG(Warn, "GetVolume: GetDefaultAudioEndpoint failed. HRESULT: {:#x}", result);
+            return 100;
+        }
+
+        OS::Windows::Com::UniquePtr<IAudioEndpointVolume> endpointVolume;
+        result = audioEndpoint->Activate(
+            endpointVolume.GetIID(), CLSCTX_ALL, nullptr, (void **)endpointVolume.ReleaseAndAddressOf());
+        if (FAILED(result)) {
+            LOG(Warn, "GetVolume: Activate IAudioEndpointVolume failed. HRESULT: {:#x}", result);
+            return 100;
+        }
+
+        float volumeLevel = 0.0f;
+        result = endpointVolume->GetMasterVolumeLevelScalar(&volumeLevel);
+        if (FAILED(result)) {
+            LOG(Warn, "GetVolume: GetMasterVolumeLevelScalar failed. HRESULT: {:#x}", result);
+            return 100;
+        }
+        
+        return static_cast<int>(volumeLevel * 100.0f);
+    }
+    catch (const std::exception &ex) {
+        LOG(Warn, "GetVolume: Exception: {}", ex.what());
+        return 100;
+    }
+}
+
+void Controller::ClearVolumeReductionState()
+{
+    std::lock_guard<std::mutex> lock{_mutex};
+    _savedVolume = 0;
+    _inReductionSession = false;
+    LOG(Trace, "ClearVolumeReductionState: Cleared saved volume state");
+}
+
 } // namespace Core::GlobalMedia

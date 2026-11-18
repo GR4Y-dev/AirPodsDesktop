@@ -1,5 +1,5 @@
 //
-// AirPodsDesktop - AirPods Desktop User Experience Enhancement Program.
+// AirPodsWindows - AirPods Desktop User Experience Enhancement Program.
 // Copyright (C) 2021-2022 SpriteOvO
 //
 // This program is free software: you can redistribute it and/or modify
@@ -104,6 +104,59 @@ void OnApply_automatic_ear_detection(const Fields &newFields)
     Impl::NotifyApplyObserver([&](ApplyObserver &observer) {
         observer.OnAutomaticEarDetectionChanged(newFields.automatic_ear_detection);
     });
+}
+
+void OnApply_conversational_awareness(const Fields &newFields)
+{
+    LOG(Info, "OnApply_conversational_awareness: {}", newFields.conversational_awareness);
+
+    Impl::NotifyApplyObserver([&](ApplyObserver &observer) {
+        observer.OnConversationalAwarenessChanged(newFields.conversational_awareness);
+    });
+}
+
+void OnApply_conversational_awareness_volume_percent(const Fields &newFields)
+{
+    LOG(Info, "OnApply_conversational_awareness_volume_percent: {}",
+        newFields.conversational_awareness_volume_percent);
+
+    Impl::NotifyApplyObserver([&](ApplyObserver &observer) {
+        observer.OnConversationalAwarenessVolumePercentChanged(
+            newFields.conversational_awareness_volume_percent);
+    });
+}
+
+void OnApply_personalized_volume(const Fields &newFields)
+{
+    LOG(Info, "OnApply_personalized_volume: {}", newFields.personalized_volume);
+
+    Impl::NotifyApplyObserver(
+        [&](ApplyObserver &observer) { observer.OnPersonalizedVolumeChanged(newFields.personalized_volume); });
+}
+
+void OnApply_loud_sound_reduction(const Fields &newFields)
+{
+    LOG(Info, "OnApply_loud_sound_reduction: {}", newFields.loud_sound_reduction);
+
+    Impl::NotifyApplyObserver(
+        [&](ApplyObserver &observer) { observer.OnLoudSoundReductionChanged(newFields.loud_sound_reduction); });
+}
+
+void OnApply_adaptive_transparency_level(const Fields &newFields)
+{
+    LOG(Info, "OnApply_adaptive_transparency_level: {}", newFields.adaptive_transparency_level);
+
+    Impl::NotifyApplyObserver([&](ApplyObserver &observer) {
+        observer.OnAdaptiveTransparencyLevelChanged(newFields.adaptive_transparency_level);
+    });
+}
+
+void OnApply_noise_control_mode(const Fields &newFields)
+{
+    LOG(Info, "OnApply_noise_control_mode: {}", newFields.noise_control_mode);
+
+    Impl::NotifyApplyObserver(
+        [&](ApplyObserver &observer) { observer.OnNoiseControlModeChanged(newFields.noise_control_mode); });
 }
 
 void OnApply_rssi_min(const Fields &newFields)

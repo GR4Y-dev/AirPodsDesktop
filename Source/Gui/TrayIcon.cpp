@@ -1,5 +1,5 @@
 //
-// AirPodsDesktop - AirPods Desktop User Experience Enhancement Program.
+// AirPodsWindows - AirPods Desktop User Experience Enhancement Program.
 // Copyright (C) 2021-2022 SpriteOvO
 //
 // This program is free software: you can redistribute it and/or modify
@@ -23,14 +23,69 @@
 #include <QApplication>
 #include <QPainter>
 #include <QSvgRenderer>
+#include <QToolButton>
+#include <QWidgetAction>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QPainterPath>
 
 #include <Config.h>
+#include "../Logger.h"
+#include "MainWindow.h"
+
 namespace Gui {
+namespace {
+QIcon ListeningModeIcon(int mode)
+{
+    QIcon icon;
+    for (auto iconMode : {QIcon::Normal, QIcon::Disabled}) {
+        for (auto state : {QIcon::Off, QIcon::On}) {
+            QPixmap pixmap(64, 64);
+            pixmap.fill(Qt::transparent);
+            QPainter painter(&pixmap);
+            painter.setRenderHint(QPainter::Antialiasing);
+            painter.scale(2, 2);
+            const QColor color = iconMode == QIcon::Disabled ? QColor("#848b98") :
+                state == QIcon::On ? QColor("#ffffff") : QColor("#a9caff");
+            painter.setPen(QPen(color, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+            if (mode == 0) {
+                painter.drawEllipse(QRectF(7, 7, 18, 18));
+                painter.drawLine(QPointF(9, 23), QPointF(23, 9));
+            } else if (mode == 1) {
+                QPainterPath path;
+                path.moveTo(6, 19);
+                path.cubicTo(6, 4, 26, 4, 26, 19);
+                painter.drawPath(path);
+                painter.drawRoundedRect(QRectF(5, 17, 5, 9), 2, 2);
+                painter.drawRoundedRect(QRectF(22, 17, 5, 9), 2, 2);
+                painter.drawLine(14, 19, 18, 19);
+            } else if (mode == 2) {
+                painter.drawLine(16, 9, 16, 23);
+                painter.drawArc(QRectF(5, 5, 16, 22), 110 * 16, 140 * 16);
+                painter.drawArc(QRectF(11, 5, 16, 22), -70 * 16, 140 * 16);
+            } else {
+                for (int i = 0; i < 5; ++i) {
+                    const int height = i == 2 ? 20 : (i % 2 ? 12 : 6);
+                    painter.drawLine(6 + i * 5, 16 - height / 2,
+                        6 + i * 5, 16 + height / 2);
+                }
+            }
+            painter.end();
+            icon.addPixmap(pixmap, iconMode, state);
+        }
+    }
+    return icon;
+}
+} // namespace
+
 
 TrayIcon::TrayIcon(
-    std::function<int()> getCurrentLocaleIndex, Core::QuickConnect::Controller &quickConnect)
-    : _quickConnect{quickConnect}, _settingsWindow{std::move(getCurrentLocaleIndex), quickConnect}
+    std::function<int()> getCurrentLocaleIndex, Core::QuickConnect::Controller &quickConnect,
+    std::function<Core::AirPods::Manager &()> getAirPodsManager)
+    : _quickConnect{quickConnect},
+      _settingsWindow{std::move(getCurrentLocaleIndex), quickConnect, getAirPodsManager}
 {
+    _getAirPodsManager = std::move(getAirPodsManager);
     Theme::ConfigurePopupSurface(_menu);
     _singleClickTimer.setSingleShot(true);
     connect(&_singleClickTimer, &QTimer::timeout, this, [this] {
@@ -43,7 +98,7 @@ TrayIcon::TrayIcon(
     });
     connect(_actionSettings, &QAction::triggered, this, &TrayIcon::OnSettingsClicked);
     connect(_actionAbout, &QAction::triggered, this, &TrayIcon::OnAboutClicked);
-    connect(_actionQuit, &QAction::triggered, qApp, &QApplication::quit, Qt::QueuedConnection);
+    connect(_actionQuit, &QAction::triggered, qApp, &QApplication::quit, Qt::DirectConnection);
     connect(_tray, &QSystemTrayIcon::activated, this, &TrayIcon::OnIconClicked);
     connect(_tray, &QSystemTrayIcon::messageClicked, this, &TrayIcon::ShowMainWindowRequested);
     connect(
@@ -58,7 +113,21 @@ TrayIcon::TrayIcon(
     _actionNewVersion->setVisible(false);
     _actionLowAudioLatency->setCheckable(true);
 
+    // Setup noise control menu
+    SetupNoiseControlMenu();
+    connect(_menu, &QMenu::aboutToShow, this, &TrayIcon::RefreshNoiseControl);
+    connect(_noiseControlMenu, &QMenu::aboutToShow, this, &TrayIcon::RefreshNoiseControl);
+    _noiseRefreshTimer.setInterval(500);
+    connect(&_noiseRefreshTimer, &QTimer::timeout, this, [this] {
+        if (_noiseControlMenu->isVisible()) {
+            RefreshNoiseControl();
+        }
+    });
+    _noiseRefreshTimer.start();
+
     _menu->addAction(_actionNewVersion);
+    _menu->addSeparator();
+    _menu->addMenu(_noiseControlMenu);
     _menu->addSeparator();
     _menu->addAction(_actionLowAudioLatency);
     _menu->addAction(_actionSettings);
@@ -66,15 +135,202 @@ TrayIcon::TrayIcon(
     _menu->addAction(_actionAbout);
     _menu->addAction(_actionQuit);
 
+    // Initially hide noise control menu until we have a connected ANC device
+    _noiseControlMenu->menuAction()->setVisible(false);
+
     _tray->setContextMenu(_menu);
     _tray->setIcon(qApp->windowIcon());
     _tray->show();
+}
+
+void TrayIcon::SetAirPodsManagerProvider(
+    std::function<Core::AirPods::Manager &()> getAirPodsManager)
+{
+    _getAirPodsManager = getAirPodsManager;
+    _settingsWindow.SetAirPodsManagerProvider(std::move(getAirPodsManager));
+}
+
+void TrayIcon::SetupNoiseControlMenu()
+{
+    _noiseControlMenu->setObjectName("noiseControlMenu");
+    Theme::ConfigurePopupSurface(_noiseControlMenu);
+    auto *panel = new QWidget;
+    panel->setObjectName("listeningModePanel");
+    panel->setStyleSheet(
+        "QWidget#listeningModePanel { background: #20242d; border-radius: 16px; }"
+        "QLabel { color: #f3f5fa; background: transparent; }"
+        "QToolButton { color: #e1e7f0; background: #303641; border: 2px solid transparent;"
+        " border-radius: 13px; padding: 12px 6px; }"
+        "QToolButton:hover { background: #3b4555; }"
+        "QToolButton:checked { background: #246bce; border-color: #8bbcff; color: white; }"
+        "QToolButton:disabled { color: #9ca5b4; background: #292e37; }"
+        "QToolButton:focus { border-color: #c0d7ff; }");
+    auto *layout = new QVBoxLayout(panel);
+    layout->setContentsMargins(16, 16, 16, 16);
+    layout->setSpacing(12);
+    auto *title = new QLabel(tr("Noise Control"), panel);
+    auto titleFont = title->font();
+    titleFont.setPointSize(13);
+    titleFont.setBold(true);
+    title->setFont(titleFont);
+    layout->addWidget(title);
+    auto *row = new QHBoxLayout;
+    row->setSpacing(6);
+    layout->addLayout(row);
+    _noiseStatus->setParent(panel);
+    _noiseStatus->setObjectName("listeningModeStatus");
+    _noiseStatus->setWordWrap(true);
+    _noiseStatus->setMaximumWidth(390);
+    layout->addWidget(_noiseStatus);
+    auto *panelAction = new QWidgetAction(_noiseControlMenu);
+    panelAction->setDefaultWidget(panel);
+    _noiseControlMenu->addAction(panelAction);
+    // Make actions checkable
+    _actionNoiseOff->setCheckable(true);
+    _actionNoiseCancellation->setCheckable(true);
+    _actionTransparency->setCheckable(true);
+    _actionAdaptive->setCheckable(true);
+
+    // Add to action group for mutual exclusivity
+    _noiseControlGroup->addAction(_actionNoiseOff);
+    _noiseControlGroup->addAction(_actionNoiseCancellation);
+    _noiseControlGroup->addAction(_actionTransparency);
+    _noiseControlGroup->addAction(_actionAdaptive);
+
+    int iconIndex = 0;
+    for (auto *action : _noiseControlGroup->actions()) {
+        action->setIcon(ListeningModeIcon(iconIndex++));
+        auto *column = new QWidget(panel);
+        auto *columnLayout = new QVBoxLayout(column);
+        columnLayout->setContentsMargins(0, 0, 0, 0);
+        columnLayout->setSpacing(6);
+        auto *button = new QToolButton(column);
+        button->setDefaultAction(action);
+        button->setToolButtonStyle(Qt::ToolButtonIconOnly);
+        button->setIconSize(QSize(32, 32));
+        button->setFixedSize(90, 64);
+        button->setFocusPolicy(Qt::StrongFocus);
+        button->setAccessibleName(action->text());
+        auto *label = new QLabel(action->text(), column);
+        label->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
+        label->setWordWrap(true);
+        label->setFixedWidth(90);
+        label->setMinimumHeight(40);
+        columnLayout->addWidget(button);
+        columnLayout->addWidget(label);
+        connect(action, &QAction::changed, column, [column, action] {
+            column->setVisible(action->isVisible());
+        });
+        row->addWidget(column);
+    }
+
+    // Connect signals
+    connect(_actionNoiseOff, &QAction::triggered, this, [this]() {
+        OnNoiseControlModeSelected(Core::AAP::NoiseControlMode::Off);
+    });
+    connect(_actionNoiseCancellation, &QAction::triggered, this, [this]() {
+        OnNoiseControlModeSelected(Core::AAP::NoiseControlMode::NoiseCancellation);
+    });
+    connect(_actionTransparency, &QAction::triggered, this, [this]() {
+        OnNoiseControlModeSelected(Core::AAP::NoiseControlMode::Transparency);
+    });
+    connect(_actionAdaptive, &QAction::triggered, this, [this]() {
+        OnNoiseControlModeSelected(Core::AAP::NoiseControlMode::Adaptive);
+    });
+}
+
+void TrayIcon::OnNoiseControlModeSelected(Core::AAP::NoiseControlMode mode)
+{
+    // QAction checks itself before this handler. Restore the last device-reported
+    // mode immediately; a successful write is not a device acknowledgement.
+    RefreshNoiseControl();
+    if (!_getAirPodsManager || !_getAirPodsManager().IsAAPConnected() ||
+        !_airPodsState || !Core::AirPods::Manager::SupportsANC(_airPodsState->model)) {
+        return;
+    }
+    if (!_getAirPodsManager().SetNoiseControlMode(mode)) {
+        ShowMessage(tr("Noise Control"),
+            tr("Could not send the listening mode. Check the driver connection in Settings."),
+            QSystemTrayIcon::Warning);
+    }
+    RefreshNoiseControl();
+}
+
+void TrayIcon::RefreshNoiseControl()
+{
+    const bool supported = _airPodsState &&
+        Core::AirPods::Manager::SupportsANC(_airPodsState->model);
+    const bool connected = supported && _getAirPodsManager &&
+        _getAirPodsManager().IsAAPConnected();
+    _noiseControlMenu->menuAction()->setVisible(supported);
+
+    for (auto *action : _noiseControlGroup->actions()) {
+        action->setEnabled(connected);
+    }
+    using Model = Core::AirPods::Model;
+    const bool adaptive = supported &&
+        (_airPodsState->model == Model::AirPods_Pro_2 ||
+         _airPodsState->model == Model::AirPods_Pro_2_USB_C ||
+         _airPodsState->model == Model::AirPods_Pro_3 ||
+         _airPodsState->model == Model::AirPods_4_ANC);
+    _actionAdaptive->setVisible(adaptive);
+    _currentNoiseMode = connected ? _getAirPodsManager().GetNoiseControlMode() : std::nullopt;
+    UpdateNoiseControlMenuState();
+    if (!connected) {
+        _noiseStatus->setText(tr("Current mode unavailable. Audio can stay connected, but reading "
+            "or changing the listening mode requires an AAP control connection (MagicAAP). "
+            "You can still switch modes using the AirPods stem."));
+    } else if (!_currentNoiseMode || *_currentNoiseMode == Core::AAP::NoiseControlMode::Unknown) {
+        _noiseStatus->setText(tr("Connected. Waiting for the AirPods to report their current mode."));
+    } else {
+        _noiseStatus->setText(tr("Current mode: %1").arg(
+            _noiseControlGroup->checkedAction() ?
+                _noiseControlGroup->checkedAction()->text() : tr("Unavailable")));
+    }
+}
+
+void TrayIcon::UpdateNoiseControlMenuState()
+{
+    _noiseControlGroup->setExclusive(false);
+    for (auto *action : _noiseControlGroup->actions()) {
+        action->setChecked(false);
+    }
+    _noiseControlGroup->setExclusive(true);
+    if (!_currentNoiseMode.has_value()) {
+        return;
+    }
+
+    switch (_currentNoiseMode.value()) {
+        case Core::AAP::NoiseControlMode::Off:
+            _actionNoiseOff->setChecked(true);
+            break;
+        case Core::AAP::NoiseControlMode::NoiseCancellation:
+            _actionNoiseCancellation->setChecked(true);
+            break;
+        case Core::AAP::NoiseControlMode::Transparency:
+            _actionTransparency->setChecked(true);
+            break;
+        case Core::AAP::NoiseControlMode::Adaptive:
+            _actionAdaptive->setChecked(true);
+            break;
+        default:
+            break;
+    }
+}
+
+void TrayIcon::UpdateNoiseControlMode(Core::AAP::NoiseControlMode mode)
+{
+    _currentNoiseMode = mode;
+    UpdateNoiseControlMenuState();
 }
 
 void TrayIcon::UpdateState(const Core::AirPods::State &state)
 {
     _status = Status::Updating;
     _airPodsState = state;
+    
+    RefreshNoiseControl();
+
     Repaint();
 }
 
@@ -82,6 +338,7 @@ void TrayIcon::Unavailable()
 {
     _status = Status::Unavailable;
     _airPodsState.reset();
+    RefreshNoiseControl();
     Repaint();
 }
 
@@ -95,6 +352,9 @@ void TrayIcon::Disconnect()
 
     _status = Status::Disconnected;
     _airPodsState.reset();
+    RefreshNoiseControl();
+    _currentNoiseMode.reset();
+    _noiseControlMenu->menuAction()->setVisible(false);
     Repaint();
 }
 
@@ -102,6 +362,9 @@ void TrayIcon::Unbind()
 {
     _status = Status::Unbind;
     _airPodsState.reset();
+    RefreshNoiseControl();
+    _currentNoiseMode.reset();
+    _noiseControlMenu->menuAction()->setVisible(false);
     Repaint();
 }
 
@@ -190,7 +453,7 @@ void TrayIcon::Repaint()
         toolTipContent += '\n' + _actionNewVersion->text();
     }
 
-    const auto toolTip = "AirPodsDesktop\n" + toolTipContent.trimmed();
+    const auto toolTip = "AirPodsWindows\n" + toolTipContent.trimmed();
     _tray->setToolTip(toolTip);
     emit ToolTipChanged(toolTip);
 

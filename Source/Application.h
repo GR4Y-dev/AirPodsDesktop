@@ -1,5 +1,5 @@
 //
-// AirPodsDesktop - AirPods Desktop User Experience Enhancement Program.
+// AirPodsWindows - AirPods Desktop User Experience Enhancement Program.
 // Copyright (C) 2021-2022 SpriteOvO
 //
 // This program is free software: you can redistribute it and/or modify
@@ -74,6 +74,8 @@ public:
 
     static void QuitSafely();
 
+    Core::AirPods::Manager &GetAirPodsManager();
+
 Q_SIGNALS:
     void SetTranslatorSafely(const QLocale &locale);
 
@@ -107,6 +109,12 @@ private:
     void OnAutoRunChanged(bool enable) override;
     void OnLowAudioLatencyChanged(bool enable) override;
     void OnAutomaticEarDetectionChanged(bool enable) override;
+    void OnConversationalAwarenessChanged(bool enable) override;
+    void OnConversationalAwarenessVolumePercentChanged(uint8_t percent) override;
+    void OnPersonalizedVolumeChanged(bool enable) override;
+    void OnLoudSoundReductionChanged(bool enable) override;
+    void OnAdaptiveTransparencyLevelChanged(uint8_t level) override;
+    void OnNoiseControlModeChanged(uint32_t mode) override;
     void OnRssiMinChanged(int16_t rssiMin) override;
     void OnDeviceAddressChanged(uint64_t address) override;
     void OnTrayIconBatteryChanged(Core::Settings::TrayIconBatteryBehavior behavior) override;

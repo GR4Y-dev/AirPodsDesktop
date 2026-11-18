@@ -39,6 +39,12 @@ public:
     }
     void OnLowAudioLatencyChanged(bool) override {}
     void OnAutomaticEarDetectionChanged(bool) override {}
+    void OnConversationalAwarenessChanged(bool) override {}
+    void OnConversationalAwarenessVolumePercentChanged(uint8_t) override {}
+    void OnPersonalizedVolumeChanged(bool) override {}
+    void OnLoudSoundReductionChanged(bool) override {}
+    void OnAdaptiveTransparencyLevelChanged(uint8_t) override {}
+    void OnNoiseControlModeChanged(uint32_t) override {}
     void OnRssiMinChanged(int16_t) override {}
     void OnDeviceAddressChanged(uint64_t) override {}
     void OnTrayIconBatteryChanged(Core::Settings::TrayIconBatteryBehavior) override {}

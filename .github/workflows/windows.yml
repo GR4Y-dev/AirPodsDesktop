@@ -4,15 +4,33 @@ on:
   push:
     branches:
       - main
+      - codex/pro3-listening-modes
     tags:
       - 'v*.*.*'
+    paths-ignore:
+      - '**.md'
+      - 'Docs/**'
+      - 'LICENSE'
+      - '.gitignore'
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - '**.md'
+      - 'Docs/**'
+      - 'LICENSE'
+      - '.gitignore'
   workflow_dispatch:
 
 permissions:
   contents: read
+
+# Superseded branch pushes cancel the in-flight run instead of burning a full
+# Windows build on a commit that is already obsolete. Tag refs each get their
+# own group, so release builds are never cancelled by unrelated pushes.
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 env:
   BUILD_TYPE: RelWithDebInfo
@@ -39,7 +57,7 @@ jobs:
           $cmakeContents = Get-Content CMakeLists.txt -Raw
           $match = [regex]::Match(
             $cmakeContents,
-            '(?s)project\s*\(\s*AirPodsDesktop\s+VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)'
+            '(?s)project\s*\(\s*AirPodsWindows\s+VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)'
           )
           if (-not $match.Success) {
             throw 'Unable to read the project version from CMakeLists.txt.'
@@ -67,12 +85,32 @@ jobs:
           modules: qtmultimedia
           cache: true
 
+      # The whole vcpkg checkout (including the bootstrapped vcpkg.exe) is
+      # reused across runs; runners are same-platform so the tool stays valid.
+      # v2: the v1 entry may hold a --depth 1 checkout saved by a failed run
+      # (actions/cache saves on failure too), which cannot serve the baseline.
+      - name: Cache vcpkg
+        id: vcpkg-cache
+        uses: actions/cache@v4
+        with:
+          path: Build/vcpkg
+          key: vcpkg-v2-${{ hashFiles('vcpkg.json') }}
+
+      # Full history required: vcpkg.json pins builtin-baseline to a specific
+      # commit and vcpkg `git show`s it, which a --depth 1 clone cannot serve.
+      # The cache above keeps the full checkout warm so this only runs when the
+      # baseline (vcpkg.json) changes.
       - name: Clone and bootstrap vcpkg
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/microsoft/vcpkg.git Build/vcpkg
           & Build/vcpkg/bootstrap-vcpkg.bat -disableMetrics
 
       - name: Configure
+        # NOTE: no CMAKE_<LANG>_COMPILER_LAUNCHER (sccache) here — the Visual
+        # Studio generator ignores the launcher property entirely (verified:
+        # a fake launcher is never invoked, and sccache reported 0 compile
+        # requests). Only Makefile/Ninja generators honor it.
         run: |
           cmake -S . -B Build/Release `
             -G 'Visual Studio 17 2022' `
@@ -106,19 +144,19 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           $installer = Get-ChildItem `
-            Build/Release/Installer/AirPodsDesktop-*-win64.exe |
+            Build/Release/Installer/AirPodsWindows-*-win64.exe |
             Select-Object -First 1
           if (-not $installer) {
             throw 'The NSIS installer was not generated.'
           }
 
           $portableSource =
-            "Build/Release/Installer/_CPack_Packages/win64/NSIS/AirPodsDesktop-$env:VERSION-win64/AirPodsDesktop"
+            "Build/Release/Installer/_CPack_Packages/win64/NSIS/AirPodsWindows-$env:VERSION-win64/AirPodsWindows"
           if (-not (Test-Path -LiteralPath $portableSource)) {
             throw "Portable package directory not found: $portableSource"
           }
           $requiredRuntimeFiles = @(
-            'AirPodsDesktop.exe',
+            'AirPodsWindows.exe',
             'Qt6Core.dll',
             'platforms/qwindows.dll',
             'iconengines/qsvgicon.dll',
@@ -148,7 +186,7 @@ jobs:
           if (-not $dumpbin) {
             throw 'dumpbin.exe was not found on the runner.'
           }
-          $applicationHeaders = & $dumpbin.FullName /headers (Join-Path $portableSource 'AirPodsDesktop.exe')
+          $applicationHeaders = & $dumpbin.FullName /headers (Join-Path $portableSource 'AirPodsWindows.exe')
           $installerHeaders = & $dumpbin.FullName /headers $installer.FullName
           if (($applicationHeaders -join "`n") -notmatch 'machine \(x64\)') {
             throw 'The packaged application is not x64.'
@@ -158,8 +196,8 @@ jobs:
           }
 
           New-Item -ItemType Directory -Path dist | Out-Null
-          $installerDestination = "dist/AirPodsDesktop-$env:VERSION-win64.exe"
-          $portableDestination = "dist/AirPodsDesktop-$env:VERSION-win64-portable.zip"
+          $installerDestination = "dist/AirPodsWindows-$env:VERSION-win64.exe"
+          $portableDestination = "dist/AirPodsWindows-$env:VERSION-win64-portable.zip"
           Copy-Item -LiteralPath $installer.FullName -Destination $installerDestination
           Compress-Archive -Path "$portableSource/*" -DestinationPath $portableDestination
 
@@ -181,7 +219,7 @@ jobs:
             return
           }
 
-          $certificatePath = Join-Path $env:RUNNER_TEMP 'AirPodsDesktop-signing.pfx'
+          $certificatePath = Join-Path $env:RUNNER_TEMP 'AirPodsWindows-signing.pfx'
           try {
             [IO.File]::WriteAllBytes(
               $certificatePath,
@@ -195,7 +233,7 @@ jobs:
               throw 'signtool.exe was not found on the runner.'
             }
 
-            $installer = Get-ChildItem dist/AirPodsDesktop-*-win64.exe | Select-Object -First 1
+            $installer = Get-ChildItem dist/AirPodsWindows-*-win64.exe | Select-Object -First 1
             & $signTool.FullName sign `
               /fd SHA256 `
               /td SHA256 `
@@ -221,8 +259,8 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          $source = "dist/AirPodsDesktop-$env:VERSION-win64.exe"
-          $bridge = "dist/AirPodsDesktop-$env:VERSION-win32-bridge.exe"
+          $source = "dist/AirPodsWindows-$env:VERSION-win64.exe"
+          $bridge = "dist/AirPodsWindows-$env:VERSION-win32-bridge.exe"
           if (-not (Test-Path -LiteralPath $source)) {
             throw "Signed x64 installer not found: $source"
           }
@@ -243,17 +281,26 @@ jobs:
           if (-not $signTool) {
             throw 'signtool.exe was not found on the runner.'
           }
-          Get-ChildItem dist/AirPodsDesktop-*.exe | ForEach-Object {
+          Get-ChildItem dist/AirPodsWindows-*.exe | ForEach-Object {
             & $signTool.FullName verify /pa /v $_.FullName
             if ($LASTEXITCODE -ne 0) {
               throw "Authenticode verification failed for $($_.Name)."
             }
           }
 
+      - name: Upload UI validation images
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: UI-validation-${{ github.sha }}
+          path: Build/Release/UiValidation/*.png
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: AirPodsDesktop-${{ steps.version.outputs.version }}-${{ github.sha }}
+          name: AirPodsWindows-${{ steps.version.outputs.version }}-${{ github.sha }}
           path: dist/*
           if-no-files-found: error
           retention-days: 30
@@ -269,7 +316,7 @@ jobs:
       - name: Download release assets
         uses: actions/download-artifact@v5
         with:
-          name: AirPodsDesktop-${{ needs.build.outputs.version }}-${{ github.sha }}
+          name: AirPodsWindows-${{ needs.build.outputs.version }}-${{ github.sha }}
           path: dist
 
       - name: Create draft GitHub Release
@@ -277,11 +324,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: >-
           gh release create "${{ github.ref_name }}"
-          "dist/AirPodsDesktop-${{ needs.build.outputs.version }}-win64.exe"
-          "dist/AirPodsDesktop-${{ needs.build.outputs.version }}-win64-portable.zip"
-          "dist/AirPodsDesktop-${{ needs.build.outputs.version }}-win32-bridge.exe"
+          "dist/AirPodsWindows-${{ needs.build.outputs.version }}-win64.exe"
+          "dist/AirPodsWindows-${{ needs.build.outputs.version }}-win64-portable.zip"
+          "dist/AirPodsWindows-${{ needs.build.outputs.version }}-win32-bridge.exe"
           --repo "${{ github.repository }}"
           --draft
           --verify-tag
           --generate-notes
-          --title "AirPodsDesktop ${{ github.ref_name }}"
+          --title "AirPodsWindows ${{ github.ref_name }}"

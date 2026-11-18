@@ -1,5 +1,5 @@
 #
-# AirPodsDesktop - AirPods Desktop User Experience Enhancement Program.
+# AirPodsWindows - AirPods Desktop User Experience Enhancement Program.
 # Copyright (C) 2021-2022 SpriteOvO
 #
 # This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,7 @@ if (POLICY CMP0177)
     cmake_policy(SET CMP0177 NEW)
 endif()
 
-set(APD_GITHUB_OWNER "SpriteOvO" CACHE STRING "GitHub repository owner used by the updater.")
+set(APD_GITHUB_OWNER "GR4Y-dev" CACHE STRING "GitHub repository owner used by the updater.")
 set(
     APD_GITHUB_REPOSITORY
     "AirPodsDesktop"
@@ -41,24 +41,24 @@ set(
 )
 
 project(
-    AirPodsDesktop
-    VERSION 0.6.1 # Don't forget to bump the version in `vcpkg.json` as well
+    AirPodsWindows
+    VERSION 1.3.0 # Don't forget to bump the version in `vcpkg.json` as well
     LANGUAGES C CXX
     DESCRIPTION "AirPods desktop user experience enhancement program"
     HOMEPAGE_URL "https://github.com/${APD_GITHUB_OWNER}/${APD_GITHUB_REPOSITORY}"
 )
 
 if (NOT WIN32 OR NOT MSVC)
-    message(FATAL_ERROR "AirPodsDesktop requires 64-bit Windows and MSVC 2022.")
+    message(FATAL_ERROR "AirPodsWindows requires 64-bit Windows and MSVC 2022.")
 endif()
 if (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-    message(FATAL_ERROR "AirPodsDesktop no longer supports Win32. Configure with -A x64.")
+    message(FATAL_ERROR "AirPodsWindows no longer supports Win32. Configure with -A x64.")
 endif()
 if (NOT CMAKE_CXX_COMPILER_ARCHITECTURE_ID STREQUAL "x64")
-    message(FATAL_ERROR "AirPodsDesktop supports the x64 ABI only; ARM64 is not supported.")
+    message(FATAL_ERROR "AirPodsWindows supports the x64 ABI only; ARM64 is not supported.")
 endif()
 if (MSVC_VERSION LESS 1930)
-    message(FATAL_ERROR "AirPodsDesktop requires Visual Studio 2022 or newer.")
+    message(FATAL_ERROR "AirPodsWindows requires Visual Studio 2022 or newer.")
 endif()
 
 include(FetchContent)
@@ -262,25 +262,14 @@ message("Fetch 'SingleApplication' done.")
 
 # magic_enum
 #
-find_package(magic_enum CONFIG)
-if (magic_enum_FOUND)
-    message("Found 'magic_enum' (${magic_enum_VERSION}).")
-else()
-    message("Fetching 'magic_enum'...")
-    FetchContent_Declare(
-        magic_enum
-        GIT_REPOSITORY "https://github.com/Neargye/magic_enum.git"
-        GIT_TAG "3d1f6a5a2a3fbcba077e00ad0ccc2dd9fefc2ca7" # v0.7.3
-    )
-    FetchContent_MakeAvailable(magic_enum)
-    message("Fetch 'magic_enum' done.")
-endif()
+find_package(magic_enum CONFIG REQUIRED)
+message("Found 'magic_enum' (${magic_enum_VERSION}).")
 
 #
 # Boost libraries
 #
 
-# stacktrace
+# Find Boost (without components for stacktrace)
 #
 if (MSVC)
     set(APD_STACKTRACE_COMPONENT stacktrace_windbg)
@@ -332,6 +321,8 @@ set(
     "Source/Core/Debug.cpp"
     "Source/Core/Update.cpp"
     "Source/Core/AirPods.cpp"
+    "Source/Core/AAPAtt.cpp"
+    "Source/Core/ConnectionDiagnostics.cpp"
     "Source/Core/QuickConnect.cpp"
     "Source/Core/Settings.cpp"
     "Source/Core/SettingsRepository.cpp"
@@ -357,6 +348,7 @@ set(
     "Source/Gui/SettingsWindow.cpp"
     "Source/Gui/Widget/Battery.cpp"
     "Source/Gui/Widget/AnimationView.cpp"
+    "Source/Gui/Widget/DriverStatusCard.cpp"
     "Source/Gui/Theme.cpp"
 )
 
@@ -372,6 +364,8 @@ if (WIN32)
         "Source/Core/AutoStart_win.cpp"
         "Source/Core/Bluetooth_win.cpp"
         "Source/Core/GlobalMedia_win.cpp"
+        "Source/Core/AAPManager.cpp"
+        "Source/Core/MagicAAPWinRT.cpp"
         "Source/Core/QuickConnect_win.cpp"
     )
     list(APPEND APD_APP_CODE_FILES
@@ -409,7 +403,7 @@ set(APD_QRC_FILE "Source/Resource/Resource.qrc")
 #           https://stackoverflow.com/a/60848939
 #
 
-set(APD_TRANSLATION_LOCALES bg_BG de_DE fr_FR it_IT ja_JP ko_KR pt_BR pt_PT ru_RU tr_TR uk_UA zh_CN zh_TW)
+set(APD_TRANSLATION_LOCALES bg_BG de_DE fr_FR he_IL it_IT ja_JP ko_KR pt_BR pt_PT ru_RU tr_TR uk_UA zh_CN zh_TW)
 set(APD_TS_DIR "${CMAKE_SOURCE_DIR}/Source/Resource/Translation/")
 set(APD_QM_DIR "${APD_BINARY_OUT_DIR}/translations/")
 
@@ -627,9 +621,9 @@ add_custom_command(
 if (APD_GENERATE_INSTALLER)
     set(CPACK_PACKAGE_VENDOR ${PROJECT_NAME})
     set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/Installer")
-    set(CPACK_PACKAGE_VERSION_MAJOR ${AirPodsDesktop_VERSION_MAJOR})
-    set(CPACK_PACKAGE_VERSION_MINOR ${AirPodsDesktop_VERSION_MINOR})
-    set(CPACK_PACKAGE_VERSION_PATCH ${AirPodsDesktop_VERSION_PATCH})
+    set(CPACK_PACKAGE_VERSION_MAJOR ${AirPodsWindows_VERSION_MAJOR})
+    set(CPACK_PACKAGE_VERSION_MINOR ${AirPodsWindows_VERSION_MINOR})
+    set(CPACK_PACKAGE_VERSION_PATCH ${AirPodsWindows_VERSION_PATCH})
     set(CPACK_PACKAGE_INSTALL_DIRECTORY ${PROJECT_NAME})
     set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
     set(CPACK_PACKAGE_EXECUTABLES "${PROJECT_NAME}" ${PROJECT_NAME})
@@ -727,6 +721,11 @@ target_link_libraries(
     PRIVATE
     apd_gui
     SingleApplication::SingleApplication
+    magic_enum::magic_enum
+    Boost::pfr
+    Boost::stacktrace_windbg
+    windowsapp.lib
+    runtimeobject.lib
 )
 
 ##################################################

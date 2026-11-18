@@ -60,6 +60,20 @@ Enjoy it all.</source>
         <source>Please select your AirPods device below.</source>
         <translation>请在下方选择您的 AirPods 设备。</translation>
     </message>
+    <message>
+            <source>Change log:</source>
+            <translation>变更日志：</translation>
+        </message>
+    <message>
+            <source>Hey! I found a new version available!
+
+    Current version: %1
+    Latest version: %2%3</source>
+            <translation>嗨！我发现了一个可用的新版本！
+
+    当前版本：%1
+    最新版本：%2%3</translation>
+        </message>
 </context>
 <context>
     <name>Gui::SettingsWindow</name>
@@ -88,6 +102,22 @@ Enjoy it all.</source>
         <source>Close</source>
         <translation>关闭</translation>
     </message>
+    <message>
+            <source>Off</source>
+            <translation>关闭</translation>
+        </message>
+    <message>
+            <source>Noise Cancellation</source>
+            <translation>降噪</translation>
+        </message>
+    <message>
+            <source>Transparency</source>
+            <translation>通透</translation>
+        </message>
+    <message>
+            <source>Adaptive</source>
+            <translation>自适应</translation>
+        </message>
 </context>
 <context>
     <name>Gui::TrayIcon</name>
@@ -163,6 +193,26 @@ Enjoy it all.</source>
         <source>Quick connect</source>
         <translation>快速连接</translation>
     </message>
+    <message>
+            <source>Noise Control</source>
+            <translation>降噪控制</translation>
+        </message>
+    <message>
+            <source>Off</source>
+            <translation>关闭</translation>
+        </message>
+    <message>
+            <source>Noise Cancellation</source>
+            <translation>降噪</translation>
+        </message>
+    <message>
+            <source>Transparency</source>
+            <translation>通透</translation>
+        </message>
+    <message>
+            <source>Adaptive</source>
+            <translation>自适应</translation>
+        </message>
 </context>
 <context>
     <name>Gui::UpdateWindow</name>
@@ -233,6 +283,10 @@ Enjoy it all.</source>
         <source>AirPodsDesktop information</source>
         <translation>AirPodsDesktop 信息</translation>
     </message>
+    <message>
+            <source>AirPodsWindows information</source>
+            <translation>AirPodsWindows 信息</translation>
+        </message>
 </context>
 <context>
     <name>QMessageBox</name>
@@ -242,6 +296,22 @@ You need to pair your AirPods in Windows Bluetooth Settings first.</source>
         <translation>未找到已配对的设备。
 您需要先在 Windows 蓝牙设置中配对您的 AirPods。</translation>
     </message>
+    <message>
+            <source>Update now</source>
+            <translation>现在更新</translation>
+        </message>
+    <message>
+            <source>Skip this version</source>
+            <translation>跳过这个版本</translation>
+        </message>
+    <message>
+            <source>View release</source>
+            <translation>查看发布</translation>
+        </message>
+    <message>
+            <source>Remind me later</source>
+            <translation>稍后提醒我</translation>
+        </message>
 </context>
 <context>
     <name>QObject</name>
@@ -269,6 +339,58 @@ You need to pair your AirPods in Windows Bluetooth Settings first.</source>
         <source>A click on the tray icon connects the selected device instead of opening the main window. Double-click still opens it.</source>
         <translation>单击系统托盘图标会连接选定的设备，而不是打开主窗口；双击仍会打开主窗口。</translation>
     </message>
+    <message>
+            <source>It fixes short audio playback problems, but may increase battery consumption.</source>
+            <translation>修复短音频的播放问题，但可能会增加电池消耗。</translation>
+        </message>
+    <message>
+            <source>Off</source>
+            <translation>关闭</translation>
+        </message>
+    <message>
+            <source>Noise Cancellation</source>
+            <translation>降噪</translation>
+        </message>
+    <message>
+            <source>Transparency</source>
+            <translation>通透</translation>
+        </message>
+    <message>
+            <source>Adaptive</source>
+            <translation>自适应</translation>
+        </message>
+    <message>
+            <source>Unknown</source>
+            <translation>未知</translation>
+        </message>
+    <message>
+            <source>Enabled</source>
+            <translation>已启用</translation>
+        </message>
+    <message>
+            <source>Disabled</source>
+            <translation>已禁用</translation>
+        </message>
+    <message>
+            <source>Automatically lowers media volume when you start speaking (AirPods Pro/Max only).</source>
+            <translation>当您开始说话时自动降低媒体音量（仅限 AirPods Pro/Max）。</translation>
+        </message>
+    <message>
+            <source>Adjusts media volume based on your environment and listening habits.</source>
+            <translation>根据您的环境和聆听习惯自动调整媒体音量。</translation>
+        </message>
+    <message>
+            <source>Protects your hearing by reducing loud sounds.</source>
+            <translation>通过降低响亮的声音来保护您的听力。</translation>
+        </message>
+    <message>
+            <source>Controls the amount of environmental sound in Adaptive mode (0-50).</source>
+            <translation>控制自适应模式下的环境声音量（0-50）。</translation>
+        </message>
+    <message>
+            <source>Current noise control mode (1=Off, 2=ANC, 3=Transparency, 4=Adaptive).</source>
+            <translation>当前降噪控制模式（1=关闭，2=降噪，3=通透，4=自适应）。</translation>
+        </message>
 </context>
 <context>
     <name>SelectWindow</name>
@@ -339,18 +461,18 @@ You need to pair your AirPods in Windows Bluetooth Settings first.</source>
         <source>About</source>
         <translation>关于</translation>
     </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open source &lt;a href=&quot;https://github.com/SpriteOvO/AirPodsDesktop&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;repository&lt;/span&gt;&lt;/a&gt; and licensed under &lt;a href=&quot;https://github.com/SpriteOvO/AirPodsDesktop/blob/main/LICENSE&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;GPLv3&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;本项目为开源软件，请参阅&lt;a href=&quot;https://github.com/SpriteOvO/AirPodsDesktop&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;代码仓库&lt;/span&gt;&lt;/a&gt;，并依据 &lt;a href=&quot;https://github.com/SpriteOvO/AirPodsDesktop/blob/main/LICENSE&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;GPLv3&lt;/span&gt;&lt;/a&gt; 许可证发布。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
+        <message>
+            <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open source &lt;a href=&quot;https://github.com/YimingZhanshen/AirPodsWindows&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;repository&lt;/span&gt;&lt;/a&gt; and licensed under &lt;a href=&quot;https://github.com/YimingZhanshen/AirPodsWindows/blob/main/LICENSE&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;GPLv3&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+            <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开源 &lt;a href=&quot;https://github.com/YimingZhanshen/AirPodsWindows&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;仓库&lt;/span&gt;&lt;/a&gt; 根据 &lt;a href=&quot;https://github.com/YimingZhanshen/AirPodsWindows/blob/main/LICENSE&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;GPLv3&lt;/span&gt;&lt;/a&gt; 许可。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        </message>
     <message>
         <source>Language</source>
         <translation>语言</translation>
     </message>
-    <message>
-        <source>Copyright © 2021-2022 SpriteOvO. All rights reserved.</source>
-        <translation>版权所有 © 2021-2022 SpriteOvO. 保留所有权利。</translation>
-    </message>
+        <message>
+            <source>Copyright © 2021-2026 SpriteOvO &amp; YimingZhanshen. All rights reserved.</source>
+            <translation>版权所有 © 2021-2026 SpriteOvO &amp; YimingZhanshen. 保留所有权利。</translation>
+        </message>
     <message>
         <source>Display battery on taskbar</source>
         <translation>在任务栏上显示电量</translation>
@@ -403,6 +525,34 @@ You need to pair your AirPods in Windows Bluetooth Settings first.</source>
         <source>Dark</source>
         <translation>深色</translation>
     </message>
+    <message>
+            <source>AirPodsWindows Settings</source>
+            <translation>AirPodsWindows 设置</translation>
+        </message>
+    <message>
+            <source>Conversational awareness</source>
+            <translation>对话感知</translation>
+        </message>
+    <message>
+            <source>Speaking volume reduction:</source>
+            <translation>说话时音量降低至：</translation>
+        </message>
+    <message>
+            <source>Personalized volume</source>
+            <translation>个性化音量</translation>
+        </message>
+    <message>
+            <source>Reduce loud sounds</source>
+            <translation>响亮声音降低</translation>
+        </message>
+    <message>
+            <source>Noise control mode</source>
+            <translation>降噪控制模式</translation>
+        </message>
+    <message>
+            <source>Adaptive transparency level</source>
+            <translation>自适应通透级别</translation>
+        </message>
 </context>
 <context>
     <name>UpdateWindow</name>

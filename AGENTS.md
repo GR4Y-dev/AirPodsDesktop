@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-AirPodsDesktop is a Windows-focused C++20 and Qt 6 application built with CMake. Application startup and shared utilities live directly under `Source/`. Platform-independent behavior is grouped in `Source/Core/`, while Windows implementations use the `_win.cpp` suffix. Qt windows, widgets, and `.ui` forms belong in `Source/Gui/`. Images, audio, videos, translations, and Qt/Windows resource manifests are under `Source/Resource/`. Keep CMake helpers in `CMake/`, build documentation in `Docs/`, and screenshots or promotional assets in `Assets/`. Generated output belongs in `Build/` and must not be committed.
+AirPodsWindows (a fork of AirPodsDesktop) is a Windows-focused C++20 and Qt 6 application built with CMake. Application startup and shared utilities live directly under `Source/`. Platform-independent behavior is grouped in `Source/Core/`, while Windows implementations use the `_win.cpp` suffix. Qt windows, widgets, and `.ui` forms belong in `Source/Gui/`. Images, audio, videos, translations, and Qt/Windows resource manifests are under `Source/Resource/`. Keep CMake helpers in `CMake/`, build documentation in `Docs/`, and screenshots or promotional assets in `Assets/`. Generated output belongs in `Build/` and must not be committed.
 
 Respect the target dependency direction: `apd_support` → `apd_domain` → `apd_core`, with `apd_presentation` feeding `apd_gui`. Keep platform calls and widgets out of domain code.
 

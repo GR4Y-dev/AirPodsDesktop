@@ -1,5 +1,5 @@
 //
-// AirPodsDesktop - AirPods Desktop User Experience Enhancement Program.
+// AirPodsWindows - AirPods Desktop User Experience Enhancement Program.
 // Copyright (C) 2021-2022 SpriteOvO
 //
 // This program is free software: you can redistribute it and/or modify
@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <mutex>
 
@@ -48,6 +49,12 @@ public:
     virtual void OnAutoRunChanged(bool enable) = 0;
     virtual void OnLowAudioLatencyChanged(bool enable) = 0;
     virtual void OnAutomaticEarDetectionChanged(bool enable) = 0;
+    virtual void OnConversationalAwarenessChanged(bool enable) = 0;
+    virtual void OnConversationalAwarenessVolumePercentChanged(uint8_t percent) = 0;
+    virtual void OnPersonalizedVolumeChanged(bool enable) = 0;
+    virtual void OnLoudSoundReductionChanged(bool enable) = 0;
+    virtual void OnAdaptiveTransparencyLevelChanged(uint8_t level) = 0;
+    virtual void OnNoiseControlModeChanged(uint32_t mode) = 0;
     virtual void OnRssiMinChanged(int16_t rssiMin) = 0;
     virtual void OnDeviceAddressChanged(uint64_t address) = 0;
     virtual void OnTrayIconBatteryChanged(TrayIconBatteryBehavior behavior) = 0;
@@ -74,6 +81,24 @@ void SetRepository(std::unique_ptr<Repository> repository);
     callback(bool, automatic_ear_detection, {true},                                                \
         Impl::OnApply(&OnApply_automatic_ear_detection),                                           \
         Impl::Desc{QT_TRANSLATE_NOOP("QObject", "It automatically pauses or resumes media when your AirPods are taken out or put in your ears.")}) \
+    callback(bool, conversational_awareness, {false},                                              \
+        Impl::OnApply(&OnApply_conversational_awareness),                                          \
+        Impl::Desc{QT_TRANSLATE_NOOP("QObject", "Automatically lowers media volume when you start speaking (AirPods Pro/Max only).")}) \
+    callback(uint8_t, conversational_awareness_volume_percent, {40},                               \
+        Impl::OnApply(&OnApply_conversational_awareness_volume_percent),                           \
+        Impl::Desc{QT_TRANSLATE_NOOP("QObject", "Volume percentage when speaking (based on your pre-speaking volume).")}) \
+    callback(bool, personalized_volume, {false},                                                   \
+        Impl::OnApply(&OnApply_personalized_volume),                                               \
+        Impl::Desc{QT_TRANSLATE_NOOP("QObject", "Adjusts media volume based on your environment and listening habits.")}) \
+    callback(bool, loud_sound_reduction, {false},                                                  \
+        Impl::OnApply(&OnApply_loud_sound_reduction),                                              \
+        Impl::Desc{QT_TRANSLATE_NOOP("QObject", "Protects your hearing by reducing loud sounds.")})                 \
+    callback(uint8_t, adaptive_transparency_level, {25},                                           \
+        Impl::OnApply(&OnApply_adaptive_transparency_level),                                       \
+        Impl::Desc{QT_TRANSLATE_NOOP("QObject", "Caps how loud loud sounds get, for hearing protection (0-100).")}) \
+    callback(uint32_t, noise_control_mode, {1},                                                    \
+        Impl::OnApply(&OnApply_noise_control_mode),                                                \
+        Impl::Desc{QT_TRANSLATE_NOOP("QObject", "Current noise control mode (1=Off, 2=ANC, 3=Transparency, 4=Adaptive).")}) \
     callback(QString, skipped_version, {})                                                         \
     callback(int16_t, rssi_min, {-80}, Impl::OnApply(&OnApply_rssi_min))                           \
     callback(bool, reduce_loud_sounds, {false}, Impl::Deprecated())                                \
@@ -249,6 +274,12 @@ void OnApply_appearance_mode(const Fields &newFields);
 void OnApply_auto_run(const Fields &newFields);
 void OnApply_low_audio_latency(const Fields &newFields);
 void OnApply_automatic_ear_detection(const Fields &newFields);
+void OnApply_conversational_awareness(const Fields &newFields);
+void OnApply_conversational_awareness_volume_percent(const Fields &newFields);
+void OnApply_personalized_volume(const Fields &newFields);
+void OnApply_loud_sound_reduction(const Fields &newFields);
+void OnApply_adaptive_transparency_level(const Fields &newFields);
+void OnApply_noise_control_mode(const Fields &newFields);
 void OnApply_rssi_min(const Fields &newFields);
 void OnApply_device_address(const Fields &newFields);
 void OnApply_tray_icon_battery(const Fields &newFields);

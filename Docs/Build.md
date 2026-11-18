@@ -2,7 +2,7 @@
 
 ## Windows prerequisites
 
-AirPodsDesktop uses C++20 and builds for **Windows x64** with:
+AirPodsWindows uses C++20 and builds for **Windows x64** with:
 
 - [CMake](https://cmake.org/download/) 3.20 or newer.
 - Visual Studio 2022 with the C++ desktop tools.
@@ -18,8 +18,8 @@ Qt package feed, so repository builds do not require Qt account credentials.
 Clone the repository and enter its root directory in PowerShell:
 
 ```powershell
-git clone --recursive https://github.com/SpriteOvO/AirPodsDesktop.git
-cd AirPodsDesktop
+git clone --recursive https://github.com/YimingZhanshen/AirPodsWindows.git
+cd AirPodsWindows
 ```
 
 Replace the vcpkg and Qt paths before configuring:

@@ -17,6 +17,25 @@ CMakeSettings.json
 # Build
 Build/
 
+# Test files
+TestBuild/
+CMakeLists_Test.txt
+Source/Core/MagicAAPTest.cpp
+
+# IDA/Reverse engineering files
+ida/
+ida.txt
+
+# Downloaded dependencies
+librepods-main/
+librepods-main.zip
+vcpkg_installed/
+
+# Analysis documentation (temporary)
+Docs/MagicAAP_Analysis.md
+Docs/MagicAAP_Problem_Summary.md
+Docs/MagicAAP_Research.md
+
 # Local notes for converted video assets
 Source/Resource/Video/README.md
 
@@ -27,5 +46,10 @@ Tools/__pycache__/
 # Local one-time release and performance notes
 Docs/ReleaseNotes/0.6.0.md
 Docs/Performance.md
+
+# Internal planning and competitor research (maintained locally, not open-sourced)
+Docs/UpgradeBlueprint.md
+Docs/MagicPods-RE-Notes.md
+Docs/ReleaseNotes/
 
 build_release.ps1

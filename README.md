@@ -1,20 +1,26 @@
+> **GR4Y-dev development fork - not yet hardware validated.**
+> Based on [SpriteOvO/AirPodsDesktop](https://github.com/SpriteOvO/AirPodsDesktop) and
+> [YimingZhanshen/AirPodsWindows](https://github.com/YimingZhanshen/AirPodsWindows).
+> Includes Pro 3 listening-mode controls. A compatible MagicAAP driver is required.
+> See [fork status and validation](Docs/Fork.md). Original copyrights and GPL license are retained.
+
 <h1 align="center">
-    <a href="https://github.com/SpriteOvO/AirPodsDesktop"><img src="/Source/Resource/Image/Icon.svg" alt="Icon" width="128"></a>
+    <a href="https://github.com/GR4Y-dev/AirPodsDesktop"><img src="/Source/Resource/Image/Icon.svg" alt="Icon" width="128"></a>
     <br>
-    AirPodsDesktop
+    AirPodsWindows
 </h1>
-<p align="center">Enhance your AirPods experience on Windows</p>
+<p align="center">AirPods desktop user experience enhancement program - Full ANC control on Windows</p>
 <p align="center">
-    <a href="https://github.com/SpriteOvO/AirPodsDesktop/actions/workflows/windows.yml">
-        <img src="https://github.com/SpriteOvO/AirPodsDesktop/actions/workflows/windows.yml/badge.svg"/>
+    <a href="https://github.com/GR4Y-dev/AirPodsDesktop/actions/workflows/windows.yml">
+        <img src="https://github.com/GR4Y-dev/AirPodsDesktop/actions/workflows/windows.yml/badge.svg"/>
     </a>
-    <a href="https://github.com/SpriteOvO/AirPodsDesktop/releases">
-        <img src="https://img.shields.io/github/v/release/SpriteOvO/AirPodsDesktop?include_prereleases"/>
+    <a href="https://github.com/GR4Y-dev/AirPodsDesktop/releases">
+        <img src="https://img.shields.io/github/v/release/GR4Y-dev/AirPodsDesktop?include_prereleases"/>
     </a>
-    <a href="https://github.com/SpriteOvO/AirPodsDesktop/releases">
-        <img src="https://img.shields.io/github/downloads/SpriteOvO/AirPodsDesktop/total.svg"/>
+    <a href="https://github.com/GR4Y-dev/AirPodsDesktop/releases">
+        <img src="https://img.shields.io/github/downloads/GR4Y-dev/AirPodsDesktop/total.svg"/>
     </a>
-    <a href="https://github.com/SpriteOvO/AirPodsDesktop/compare">
+    <a href="https://github.com/GR4Y-dev/AirPodsDesktop/compare">
         <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"/>
     </a>
     <a href="/LICENSE">
@@ -22,6 +28,31 @@
     </a>
 </p>
 <p align="center">🌎 English | 🌏 <a href="/README-CN.md">简体中文</a> | 🌏 <a href="/README-TW.md">繁體中文</a></p>
+
+> [!IMPORTANT]
+> **This is a fork — it is not AirPodsDesktop.**
+> AirPodsWindows keeps everything the upstream project offers and adds the part upstream does not have:
+> **full ANC control on Windows** through the [MagicAAP driver](https://magicpods.app/magicaap/) —
+> noise-control modes, conversational awareness with a speaking-volume slider, personalized volume,
+> loud-sound reduction, adaptive transparency, and a tray noise-control menu.
+> Looking for the original project? → [SpriteOvO/AirPodsDesktop](https://github.com/SpriteOvO/AirPodsDesktop)
+
+## 🆚 AirPodsWindows vs AirPodsDesktop
+
+| | [SpriteOvO/AirPodsDesktop](https://github.com/SpriteOvO/AirPodsDesktop) (upstream) | **AirPodsWindows (this repository)** |
+| --- | --- | --- |
+| Battery, ear detection, popup animations, light/dark themes | ✅ | ✅ |
+| **Windows ANC control** — Off / Noise Cancellation / Transparency / Adaptive | ❌ | ✅ (MagicAAP driver) |
+| Conversational awareness **+ speaking-volume reduction slider** | ❌ | ✅ |
+| Personalized volume · loud-sound reduction · adaptive transparency level | ❌ | ✅ |
+| Tray noise-control menu | ❌ | ✅ |
+| Releases & in-app updater point to | `SpriteOvO/AirPodsDesktop` | **`GR4Y-dev/AirPodsDesktop`** |
+| Issue tracker for this build | upstream issues | this repository |
+| Base line | Qt 6.8.3, x64 only (since 0.6.1) | kept in sync with upstream |
+
+* Only the ANC features need the [MagicAAP driver](https://magicpods.app/magicaap/); everything else works without it.
+* Problems that reproduce on the original project belong upstream — this repository tracks the Windows ANC
+  work and everything else that differs in the fork.
 
 ## 🔍 Preview
 
@@ -36,11 +67,29 @@
 * 🚀 Low audio latency mode.
 * 🌈 Animated device popups and light, dark, or system themes.
 
+### Advanced ANC features (requires the MagicAAP driver)
+
+* 🎧 Noise control - switch between Off / Noise Cancellation / Transparency / Adaptive.
+* 🗣️ Conversational awareness - lowers media volume while you speak (AirPods Pro/Max), with an adjustable speaking-volume reduction.
+* 🔊 Personalized volume - adjusts volume from your environment and listening habits.
+* 👂 Ear detection status - real-time left/right wearing status.
+* 🔇 Loud sound reduction - protects your hearing by lowering loud sounds.
+* 📊 Adaptive transparency level - fine control of environmental sound pass-through (0-50).
+
 ## 💻 System requirements
 
 Official builds support Windows 10 1809 or newer and Windows 11 on x64. 32-bit Windows and ARM64
 are not supported. Existing Qt 5/Win32 users can migrate through the in-app updater while keeping
 their user settings.
+
+ANC control additionally requires the [MagicAAP driver](https://magicpods.app/magicaap/) and only
+applies to AirPods Pro / Max / AirPods 4 (ANC).
+
+## 📦 Installation
+
+1. Download the latest version from [Releases](https://github.com/GR4Y-dev/AirPodsDesktop/releases)
+2. Run the installer or extract the portable version
+3. (Optional) Install the MagicAAP driver to enable ANC control features — [see Docs/Driver.md for full installation instructions](/Docs/Driver.md)
 
 ## 🛠️ Build and test
 
@@ -48,10 +97,10 @@ See the [Build Instructions](/Docs/Build.md) for Windows prerequisites, build co
 
 ## 🤝 Contribute
 
-*AirPodsDesktop* is an open source project, here are some ways you can contribute:
+*AirPodsWindows* is an open source project, here are some ways you can contribute:
 
-* [Open an issue](https://github.com/SpriteOvO/AirPodsDesktop/issues/new/choose) to report bugs or suggest new features.
-* [Submit a PR](https://github.com/SpriteOvO/AirPodsDesktop/compare) to fix bugs, improve documentation, or add features.
+* [Open an issue](https://github.com/GR4Y-dev/AirPodsDesktop/issues/new/choose) to report bugs or suggest new features.
+* [Submit a PR](https://github.com/GR4Y-dev/AirPodsDesktop/compare) to fix bugs, improve documentation, or add features.
 * [Translate to other languages](/CONTRIBUTING.md#-translation-guide) or [improve existing translations](/CONTRIBUTING.md#-translation-guide).
 
 Keep `README.md`, `README-CN.md`, and `README-TW.md` aligned in section order, features, commands, links, and credits when updating project documentation.
@@ -70,8 +119,27 @@ Keep `README.md`, `README-CN.md`, and `README-TW.md` aligned in section order, f
 * [Inter](/Source/Resource/Font/Inter/LICENSE.txt) (SIL Open Font License 1.1)
 * [Noto Sans TC](/Source/Resource/Font/NotoSansTC/LICENSE.txt) (SIL Open Font License 1.1)
 
-## 🍺 Credits
+## 🍺 Credits & References
 
-* [OpenPods](https://github.com/adolfintel/OpenPods)
-* [Discontinued Privacy: Personal Data Leaks in Apple Bluetooth-Low-Energy Continuity Protocols](https://hal.inria.fr/hal-02394619/document)
-* [MagicPods](https://magicpods.app/)
+### Core References
+* [librepods](https://github.com/kavishdevar/librepods) - AAP protocol reverse engineering & documentation, MagicAAP driver (core reference for ANC implementation)
+* [OpenPods](https://github.com/adolfintel/OpenPods) - AirPods BLE broadcast protocol parsing
+
+### Protocol Documentation
+* [AAP Definitions](https://github.com/kavishdevar/librepods/blob/main/AAP%20Definitions.md) - Apple Accessory Protocol detailed definitions
+* [Discontinued Privacy: Personal Data Leaks in Apple Bluetooth-Low-Energy Continuity Protocols](https://hal.inria.fr/hal-02394619/document) - Apple BLE protocol research paper
+
+### Related Projects
+* [MagicPods](https://magicpods.app/) - Commercial AirPods Windows application
+* [AirPodsDesktop](https://github.com/SpriteOvO/AirPodsDesktop) - Original project (this project is forked from)
+
+## 📜 License
+This project is licensed under the [GPLv3 License](/LICENSE).
+
+## 👤 Authors
+* **YimingZhanshen** - Fork maintainer, Windows ANC feature development
+* **SpriteOvO** - Original project author
+
+---
+<p align="center">If this project helps you, please consider giving a ⭐ Star!</p>
+

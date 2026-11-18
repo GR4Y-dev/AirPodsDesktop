@@ -60,6 +60,20 @@ Enjoy it all.</source>
         <source>Please select your AirPods device below.</source>
         <translation>Пожалуйста, выберите свои AirPods ниже.</translation>
     </message>
+    <message>
+            <source>Change log:</source>
+            <translation>Список изменений:</translation>
+        </message>
+    <message>
+            <source>Hey! I found a new version available!
+
+    Current version: %1
+    Latest version: %2%3</source>
+            <translation>Найдена новая версия!
+
+    Текущая версия:%1
+    Последняя версия:%2%3</translation>
+        </message>
 </context>
 <context>
     <name>Gui::SettingsWindow</name>
@@ -88,6 +102,22 @@ Enjoy it all.</source>
         <source>Close</source>
         <translation>Закрыть</translation>
     </message>
+    <message>
+            <source>Off</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Noise Cancellation</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Transparency</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Adaptive</source>
+            <translation type="unfinished"></translation>
+        </message>
 </context>
 <context>
     <name>Gui::TrayIcon</name>
@@ -163,6 +193,26 @@ Enjoy it all.</source>
         <source>Quick connect</source>
         <translation>Быстрое подключение</translation>
     </message>
+    <message>
+            <source>Noise Control</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Off</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Noise Cancellation</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Transparency</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Adaptive</source>
+            <translation type="unfinished"></translation>
+        </message>
 </context>
 <context>
     <name>Gui::UpdateWindow</name>
@@ -233,6 +283,10 @@ Enjoy it all.</source>
         <source>AirPodsDesktop information</source>
         <translation>Информация об AirPodsDesktop</translation>
     </message>
+    <message>
+            <source>AirPodsWindows information</source>
+            <translation>Информация о AirPodsWindows</translation>
+        </message>
 </context>
 <context>
     <name>QMessageBox</name>
@@ -242,6 +296,22 @@ You need to pair your AirPods in Windows Bluetooth Settings first.</source>
         <translation>Сопряженное устройство не найдено.
 Сначала вам необходимо выполнить сопряжение AirPods в настройках Bluetooth Windows.</translation>
     </message>
+    <message>
+            <source>Update now</source>
+            <translation>Обновить сейчас</translation>
+        </message>
+    <message>
+            <source>Skip this version</source>
+            <translation>Пропустить эту версию</translation>
+        </message>
+    <message>
+            <source>View release</source>
+            <translation>Посмотреть релиз</translation>
+        </message>
+    <message>
+            <source>Remind me later</source>
+            <translation>Напомнить позже</translation>
+        </message>
 </context>
 <context>
     <name>QObject</name>
@@ -269,6 +339,58 @@ You need to pair your AirPods in Windows Bluetooth Settings first.</source>
         <source>A click on the tray icon connects the selected device instead of opening the main window. Double-click still opens it.</source>
         <translation>Щелчок по значку в области уведомлений подключает выбранное устройство вместо открытия главного окна. Двойной щелчок по-прежнему открывает его.</translation>
     </message>
+    <message>
+            <source>It fixes short audio playback problems, but may increase battery consumption.</source>
+            <translation>Это устраняет проблемы с воспроизведением звука, но может увеличить расход батареи наушников.</translation>
+        </message>
+    <message>
+            <source>Off</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Noise Cancellation</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Transparency</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Adaptive</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Unknown</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Enabled</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Disabled</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Automatically lowers media volume when you start speaking (AirPods Pro/Max only).</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Adjusts media volume based on your environment and listening habits.</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Protects your hearing by reducing loud sounds.</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Controls the amount of environmental sound in Adaptive mode (0-50).</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Current noise control mode (1=Off, 2=ANC, 3=Transparency, 4=Adaptive).</source>
+            <translation type="unfinished"></translation>
+        </message>
 </context>
 <context>
     <name>SelectWindow</name>
@@ -355,14 +477,14 @@ You need to pair your AirPods in Windows Bluetooth Settings first.</source>
         <source>About</source>
         <translation>О программе</translation>
     </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open source &lt;a href=&quot;https://github.com/SpriteOvO/AirPodsDesktop&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;repository&lt;/span&gt;&lt;/a&gt; and licensed under &lt;a href=&quot;https://github.com/SpriteOvO/AirPodsDesktop/blob/main/LICENSE&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;GPLv3&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Открытый исходный код доступен в &lt;a href=&quot;https://github.com/SpriteOvO/AirPodsDesktop&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;репозитории&lt;/span&gt;&lt;/a&gt; и распространяется по лицензии &lt;a href=&quot;https://github.com/SpriteOvO/AirPodsDesktop/blob/main/LICENSE&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;GPLv3&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <source>Copyright © 2021-2022 SpriteOvO. All rights reserved.</source>
-        <translation>Copyright © 2021-2022 SpriteOvO. Все права защищены.</translation>
-    </message>
+        <message>
+            <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open source &lt;a href=&quot;https://github.com/YimingZhanshen/AirPodsWindows&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;repository&lt;/span&gt;&lt;/a&gt; and licensed under &lt;a href=&quot;https://github.com/YimingZhanshen/AirPodsWindows/blob/main/LICENSE&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;GPLv3&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+            <translation type="unfinished"></translation>
+        </message>
+        <message>
+            <source>Copyright © 2021-2026 SpriteOvO &amp; YimingZhanshen. All rights reserved.</source>
+            <translation type="unfinished"></translation>
+        </message>
     <message>
         <source>Connect the selected device on a tray icon click</source>
         <translation>Подключать выбранное устройство щелчком по значку в области уведомлений</translation>
@@ -403,6 +525,30 @@ You need to pair your AirPods in Windows Bluetooth Settings first.</source>
         <source>Dark</source>
         <translation>Тёмная</translation>
     </message>
+    <message>
+            <source>AirPodsWindows Settings</source>
+            <translation>Настройки AirPodsWindows</translation>
+        </message>
+    <message>
+            <source>Conversational awareness</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Personalized volume</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Reduce loud sounds</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Noise control mode</source>
+            <translation type="unfinished"></translation>
+        </message>
+    <message>
+            <source>Adaptive transparency level</source>
+            <translation type="unfinished"></translation>
+        </message>
 </context>
 <context>
     <name>UpdateWindow</name>

@@ -1,5 +1,5 @@
 //
-// AirPodsDesktop - AirPods Desktop User Experience Enhancement Program.
+// AirPodsWindows - AirPods Desktop User Experience Enhancement Program.
 // Copyright (C) 2021-2022 SpriteOvO
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,11 +19,15 @@
 #include "SettingsWindow.h"
 
 #include <QAbstractItemView>
+#include <QDateTime>
+#include <QFileDialog>
+#include <QFile>
 #include <QPainter>
 #include <QLabel>
 #include <QListWidget>
 #include <QStackedWidget>
 #include <QStyledItemDelegate>
+#include <QSysInfo>
 
 #include "Theme.h"
 #include <QCheckBox>
@@ -34,6 +38,8 @@
 #include <Config.h>
 
 #include "../Core/Debug.h"
+#include "../Core/ConnectionDiagnostics.h"
+#include "Widget/DriverStatusCard.h"
 
 using namespace std::chrono_literals;
 
@@ -85,10 +91,16 @@ void ConfigureComboBoxPopup(QComboBox *comboBox)
 
 SettingsWindow::SettingsWindow(
     std::function<int()> getCurrentLocaleIndex, Core::QuickConnect::Controller &quickConnect,
-    QWidget *parent)
+    std::function<Core::AirPods::Manager &()> getAirPodsManager, QWidget *parent)
     : QDialog{parent}, _getCurrentLocaleIndex{std::move(getCurrentLocaleIndex)},
       _quickConnect{quickConnect}
 {
+    // getAirPodsManager is deliberately NOT stored here: this window is built
+    // by the tray icon before the application's AirPods manager exists, so any
+    // resolution during construction dereferences a null pointer. The provider
+    // is installed later via SetAirPodsManagerProvider().
+    static_cast<void>(getAirPodsManager);
+
     _ui.setupUi(this);
 
     // Navigation pane + stacked pages replace the former tab widget. The last page is Debug.
@@ -161,6 +173,12 @@ SettingsWindow::SettingsWindow(
 #endif
     _ui.lbVersion->setText(versionText);
 
+    // Setup noise control mode combo box
+    _ui.cbNoiseControlMode->addItem(tr("Off"));
+    _ui.cbNoiseControlMode->addItem(tr("Noise Cancellation"));
+    _ui.cbNoiseControlMode->addItem(tr("Transparency"));
+    _ui.cbNoiseControlMode->addItem(tr("Adaptive"));
+
     _ui.hsMaxReceivingRange->setMinimum(50);
     _ui.hsMaxReceivingRange->setMaximum(100);
 
@@ -229,6 +247,42 @@ SettingsWindow::SettingsWindow(
         }
     });
 
+    connect(_ui.cbConversationalAwareness, &QCheckBox::toggled, this, [this](bool checked) {
+        if (_trigger) {
+            On_cbConversationalAwareness_toggled(checked);
+        }
+    });
+
+    connect(_ui.sliderConversationalAwarenessVolume, &QSlider::valueChanged, this, [this](int value) {
+        if (_trigger) {
+            On_sliderConversationalAwarenessVolume_valueChanged(value);
+        }
+    });
+
+    connect(_ui.cbPersonalizedVolume, &QCheckBox::toggled, this, [this](bool checked) {
+        if (_trigger) {
+            On_cbPersonalizedVolume_toggled(checked);
+        }
+    });
+
+    connect(_ui.cbLoudSoundReduction, &QCheckBox::toggled, this, [this](bool checked) {
+        if (_trigger) {
+            On_cbLoudSoundReduction_toggled(checked);
+        }
+    });
+
+    connect(_ui.cbNoiseControlMode, qOverload<int>(&QComboBox::currentIndexChanged), this, [this](int index) {
+        if (_trigger) {
+            On_cbNoiseControlMode_currentIndexChanged(index);
+        }
+    });
+
+    connect(_ui.hsAdaptiveTransparencyLevel, &QSlider::valueChanged, this, [this](int value) {
+        if (_trigger) {
+            On_hsAdaptiveTransparencyLevel_valueChanged(value);
+        }
+    });
+
     connect(_ui.hsMaxReceivingRange, &QSlider::valueChanged, this, [this](int value) {
         if (_trigger) {
             On_hsMaxReceivingRange_valueChanged(value);
@@ -287,6 +341,8 @@ SettingsWindow::SettingsWindow(
             On_pbOpenLogsDirectory_clicked();
         }
     });
+
+    SetupDriverStatusCard();
 }
 
 int SettingsWindow::GetTabCount() const
@@ -327,6 +383,13 @@ void SettingsWindow::UpdateDescriptions()
     _ui.lbDescAutoEarDetection->setText(constMetaFields.automatic_ear_detection.Description());
     _ui.lbDescTrayQuickConnect->setText(constMetaFields.tray_quick_connect_enabled.Description());
 
+    _ui.lbDescConversationalAwareness->setText(
+        constMetaFields.conversational_awareness.Description());
+    _ui.lbDescPersonalizedVolume->setText(constMetaFields.personalized_volume.Description());
+    _ui.lbDescLoudSoundReduction->setText(constMetaFields.loud_sound_reduction.Description());
+    _ui.lbDescAdaptiveTransparencyLevel->setText(
+        constMetaFields.adaptive_transparency_level.Description());
+
     // The About text carries a hard-coded link colour inside the (translated) HTML; swap it
     // for the theme accent so it stays readable in dark mode.
     const auto accent = Theme::Manager::Instance().Accent().name(QColor::HexRgb);
@@ -337,6 +400,86 @@ void SettingsWindow::UpdateStandardButtonTexts()
 {
     _ui.buttonBox->button(QDialogButtonBox::RestoreDefaults)->setText(tr("Restore Defaults"));
     _ui.buttonBox->button(QDialogButtonBox::Close)->setText(tr("Close"));
+}
+
+// Inserts the driver status card after the device card on the General page and
+// wires its refresh to the AAP connection state (blueprint 1.1).
+void SettingsWindow::SetupDriverStatusCard()
+{
+    _driverStatusCard = new DriverStatusCard{_ui.general};
+    const auto deviceCardIndex = _ui.generalLayout->indexOf(_ui.cardDevice);
+    _ui.generalLayout->insertWidget(deviceCardIndex + 1, _driverStatusCard);
+
+    // No manager yet: the card stays hidden until SetAirPodsManagerProvider()
+    // runs. Resolving the manager here would dereference the not-yet-created
+    // application manager (the tray icon builds this window before it exists).
+    _driverStatusCard->setVisible(false);
+
+    connect(_driverStatusCard, &DriverStatusCard::OpenDriverDocsRequested, this, [] {
+        QDesktopServices::openUrl(QUrl{
+            QStringLiteral("https://github.com/YimingZhanshen/AirPodsWindows/blob/main/Docs/Driver.md")});
+    });
+    // Blueprint 1.4: one-click export of the connection step log. The report is
+    // built from the recorder's redacted entries and written wherever the user
+    // picks — it never leaves the machine by itself (data sovereignty).
+    connect(_driverStatusCard, &DriverStatusCard::ExportDiagnosticsRequested, this, [this] {
+        const auto defaultName = QString{"AirPodsWindows-diagnostics-%1.txt"}.arg(
+            QDateTime::currentDateTime().toString("yyyyMMdd-HHmmss"));
+        const auto path = QFileDialog::getSaveFileName(
+            this, tr("Export diagnostics"), defaultName, tr("Text files (*.txt)"));
+        if (path.isEmpty()) {
+            return;
+        }
+
+        QFile file{path};
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QMessageBox::warning(this, tr("Export diagnostics"),
+                                 tr("Could not write the diagnostics file."));
+            return;
+        }
+
+        const auto aapConnected =
+            _getAirPodsManager && _getAirPodsManager().IsAAPConnected();
+        const auto viaDriver =
+            _getAirPodsManager && _getAirPodsManager().IsAAPConnectedViaMagicAAP();
+        const auto header =
+            QString{"AirPodsWindows %1\nOS: %2\ndriver: %3\naap connected: %4 (via driver: %5)"}
+                .arg(
+                    QStringLiteral(CONFIG_VERSION_STRING),
+                    QSysInfo::prettyProductName(),
+                    Core::AAP::Manager::IsMagicAAPDriverAvailable() ? tr("installed")
+                                                                    : tr("not installed"),
+                    aapConnected ? QStringLiteral("yes") : QStringLiteral("no"),
+                    viaDriver ? QStringLiteral("yes") : QStringLiteral("no"))
+                .toStdString();
+        const auto report = Core::Diagnostics::Recorder::Instance().BuildReport(header);
+        file.write(report.data(), static_cast<qint64>(report.size()));
+    });
+}
+
+// Called by the application layer once the AirPods manager exists; see the
+// header for why this cannot happen during construction.
+void SettingsWindow::SetAirPodsManagerProvider(
+    std::function<Core::AirPods::Manager &()> getAirPodsManager)
+{
+    _getAirPodsManager = std::move(getAirPodsManager);
+    if (_driverStatusCard == nullptr || !_getAirPodsManager) {
+        return;
+    }
+
+    _driverStatusCard->setVisible(true);
+    _driverStatusCard->SetManagerProvider(_getAirPodsManager);
+
+    if (!_driverCardSignalConnected) {
+        auto &manager = _getAirPodsManager();
+        connect(
+            &manager, &Core::AirPods::Manager::AapConnectionStateChangedSafely, _driverStatusCard,
+            [this](bool) { _driverStatusCard->Refresh(); });
+        connect(
+            &manager, &Core::AirPods::Manager::AapConnectionFailedSafely, _driverStatusCard,
+            [this](int) { _driverStatusCard->Refresh(); });
+        _driverCardSignalConnected = true;
+    }
 }
 
 void SettingsWindow::InitCreditsText()
@@ -385,9 +528,34 @@ void SettingsWindow::InitCreditsText()
         }
         return result;
     }();
-    auto libsStr = tr("Third-Party Libraries:") + libs;
 
-    _ui.tbCredits->setHtml(l10nContributorsStr + libsStr);
+    static QString references = [] {
+        struct RefInfo {
+            const char *name, *url, *description;
+        };
+        static std::vector<RefInfo> refs{
+            // clang-format off
+            { "librepods", "https://github.com/kavishdevar/librepods", "AAP protocol reverse engineering" },
+            { "MagicAAP", "https://magicpods.app/magicaap/", "MagicAAP driver for ANC features" },
+            { "OpenPods", "https://github.com/adolfintel/OpenPods", "AirPods BLE protocol" },
+            { "AirPodsDesktop", "https://github.com/SpriteOvO/AirPodsDesktop", "Original project" }
+            // clang-format on
+        };
+
+        QString result;
+        for (const auto &ref : refs) {
+            result += QString{"<br> - <a href=\"%2\">%1</a> (%3)"}
+                          .arg(ref.name)
+                          .arg(ref.url)
+                          .arg(ref.description);
+        }
+        return result;
+    }();
+
+    auto libsStr = tr("Third-Party Libraries:") + libs;
+    auto refsStr = "<br><br>References:" + references;
+
+    _ui.tbCredits->setHtml(l10nContributorsStr + libsStr + refsStr);
 }
 
 void SettingsWindow::RestoreDefaults()
@@ -411,6 +579,23 @@ void SettingsWindow::Update(const Fields &fields, bool trigger)
     _ui.cbLowAudioLatency->setChecked(fields.low_audio_latency);
 
     _ui.cbAutoEarDetection->setChecked(fields.automatic_ear_detection);
+
+    _ui.cbConversationalAwareness->setChecked(fields.conversational_awareness);
+
+    _ui.sliderConversationalAwarenessVolume->setValue(fields.conversational_awareness_volume_percent);
+    _ui.lblConversationalAwarenessVolumeValue->setText(QString::number(fields.conversational_awareness_volume_percent) + "%");
+
+    _ui.cbPersonalizedVolume->setChecked(fields.personalized_volume);
+
+    _ui.cbLoudSoundReduction->setChecked(fields.loud_sound_reduction);
+
+    // noise_control_mode values 1-4 map to UI index 0-3
+    int noiseControlIndex = static_cast<int>(fields.noise_control_mode) - 1;
+    if (noiseControlIndex >= 0 && noiseControlIndex < _ui.cbNoiseControlMode->count()) {
+        _ui.cbNoiseControlMode->setCurrentIndex(noiseControlIndex);
+    }
+
+    _ui.hsAdaptiveTransparencyLevel->setValue(fields.adaptive_transparency_level);
 
     _ui.hsMaxReceivingRange->setValue(-fields.rssi_min);
 
@@ -504,6 +689,12 @@ void SettingsWindow::showEvent(QShowEvent *event)
     // Enumerating paired Bluetooth devices and every audio endpoint is not free, so it happens
     // when the dialog is opened rather than on every application start.
     _quickConnect.RefreshDevices();
+
+    // The driver can be installed (or broken by a Windows update) while the app runs;
+    // re-probe the link state each time the dialog opens.
+    if (_driverStatusCard != nullptr) {
+        _driverStatusCard->Refresh();
+    }
 }
 
 void SettingsWindow::On_cbLanguages_currentIndexChanged(int index)
@@ -520,7 +711,7 @@ void SettingsWindow::On_cbLanguages_currentIndexChanged(int index)
         _ui.cbLanguages->setCurrentIndex(_lastLanguageIndex);
         // clang-format off
         QDesktopServices::openUrl(QUrl{
-            "https://github.com/SpriteOvO/AirPodsDesktop/blob/main/CONTRIBUTING.md#-translation-guide"
+            "https://github.com/YimingZhanshen/AirPodsWindows/blob/main/CONTRIBUTING.md#-translation-guide"
         });
         // clang-format on
     }
@@ -576,6 +767,38 @@ void SettingsWindow::On_cbLowAudioLatency_toggled(bool checked)
 void SettingsWindow::On_cbAutoEarDetection_toggled(bool checked)
 {
     ModifiableAccess()->automatic_ear_detection = checked;
+}
+
+void SettingsWindow::On_cbConversationalAwareness_toggled(bool checked)
+{
+    ModifiableAccess()->conversational_awareness = checked;
+}
+
+void SettingsWindow::On_sliderConversationalAwarenessVolume_valueChanged(int value)
+{
+    _ui.lblConversationalAwarenessVolumeValue->setText(QString::number(value) + "%");
+    ModifiableAccess()->conversational_awareness_volume_percent = static_cast<uint8_t>(value);
+}
+
+void SettingsWindow::On_cbPersonalizedVolume_toggled(bool checked)
+{
+    ModifiableAccess()->personalized_volume = checked;
+}
+
+void SettingsWindow::On_cbLoudSoundReduction_toggled(bool checked)
+{
+    ModifiableAccess()->loud_sound_reduction = checked;
+}
+
+void SettingsWindow::On_cbNoiseControlMode_currentIndexChanged(int index)
+{
+    // UI index 0-3 maps to NoiseControlMode values 1-4 (Off=1, ANC=2, Transparency=3, Adaptive=4)
+    ModifiableAccess()->noise_control_mode = static_cast<uint32_t>(index + 1);
+}
+
+void SettingsWindow::On_hsAdaptiveTransparencyLevel_valueChanged(int value)
+{
+    ModifiableAccess()->adaptive_transparency_level = value;
 }
 
 void SettingsWindow::On_hsMaxReceivingRange_valueChanged(int value)

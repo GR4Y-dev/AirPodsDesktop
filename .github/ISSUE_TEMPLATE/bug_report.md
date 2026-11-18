@@ -41,14 +41,14 @@ Add any other context about the problem here.
 
 <!--
 Upload the contents of log files below.
-You can open their directory in AirPodsDesktop settings or manually navigate to "C:\Users\<Username>\AppData\Local\AirPodsDesktop".
+You can open their directory in AirPodsWindows settings or manually navigate to "C:\Users\<Username>\AppData\Local\AirPodsWindows".
 -->
 
-<details><summary><b>AirPodsDesktop.log</b></summary>
+<details><summary><b>AirPodsWindows.log</b></summary>
 
 ```
-Launch AirPodsDesktop with "--trace" parameter.
-Then after the bug occurred, insert the contents of "AirPodsDesktop.log" here.
+Launch AirPodsWindows with "--trace" parameter.
+Then after the bug occurred, insert the contents of "AirPodsWindows.log" here.
 ```
 </details>
 

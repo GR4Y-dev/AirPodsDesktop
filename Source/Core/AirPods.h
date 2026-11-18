@@ -1,5 +1,5 @@
 //
-// AirPodsDesktop - AirPods Desktop User Experience Enhancement Program.
+// AirPodsWindows - AirPods Desktop User Experience Enhancement Program.
 // Copyright (C) 2021-2022 SpriteOvO
 //
 // This program is free software: you can redistribute it and/or modify
@@ -31,6 +31,8 @@
 
 #include "Bluetooth.h"
 #include "AppleCP.h"
+#include "AAP.h"
+#include "AAPManager.h"
 #include "../Helper.h"
 
 namespace Core::AirPods {
@@ -73,6 +75,14 @@ struct State {
     PodsState pods;
     CaseState caseBox;
     QString displayName;
+    
+    // AAP Protocol states (for AirPods Pro and Max with ANC support)
+    std::optional<AAP::NoiseControlMode> noiseControlMode;
+    std::optional<AAP::ConversationalAwarenessState> conversationalAwareness;
+    std::optional<AAP::PersonalizedVolumeState> personalizedVolume;
+    std::optional<AAP::LoudSoundReductionState> loudSoundReduction;
+    std::optional<bool> automaticEarDetectionEnabled;
+    std::optional<uint8_t> adaptiveTransparencyLevel;
 
     bool operator==(const State &rhs) const = default;
 };
@@ -173,18 +183,61 @@ public:
     void OnRssiMinChanged(int16_t rssiMin);
     void OnAutomaticEarDetectionChanged(bool enable);
     void OnBoundDeviceAddressChanged(uint64_t address);
+    void OnConversationalAwarenessChanged(bool enable);
+    void OnConversationalAwarenessVolumePercentChanged(uint8_t percent);
+    void OnPersonalizedVolumeChanged(bool enable);
+    void OnLoudSoundReductionChanged(bool enable);
+    void OnAdaptiveTransparencyLevelChanged(uint8_t level);
+    void OnNoiseControlModeChanged(AAP::NoiseControlMode mode);
+
+    // AAP Protocol features
+    bool SetNoiseControlMode(AAP::NoiseControlMode mode);
+    std::optional<AAP::NoiseControlMode> GetNoiseControlMode() const;
+    bool SetConversationalAwareness(bool enable);
+    std::optional<AAP::ConversationalAwarenessState> GetConversationalAwarenessState() const;
+    bool SetPersonalizedVolume(bool enable);
+    std::optional<AAP::PersonalizedVolumeState> GetPersonalizedVolumeState() const;
+    bool SetLoudSoundReduction(bool enable);
+    std::optional<AAP::LoudSoundReductionState> GetLoudSoundReductionState() const;
+    bool SetAdaptiveTransparencyLevel(uint8_t level);
+    std::optional<uint8_t> GetAdaptiveTransparencyLevel() const;
+    bool SetAdaptiveNoiseLevel(uint8_t level);
+    bool IsAAPConnected() const;
+
+    // AAP link introspection (blueprint 1.1/1.3)
+    bool IsAAPConnectedViaMagicAAP() const;
+    AAP::AttPathState GetAAPAttPathState() const;
+    AAP::ConnectFailure GetLastAAPConnectFailure() const;
+
+    // Head tracking
+    bool StartHeadTracking();
+    bool StopHeadTracking();
+    bool IsHeadTrackingActive() const;
+
+    // Check if the model supports ANC features
+    static bool SupportsANC(Model model);
 
 private:
     std::mutex _mutex;
     Details::StateManager _stateMgr;
     std::optional<Bluetooth::Device> _boundDevice;
+    std::optional<Model> _modelOverride;
     QString _deviceName;
     Model _boundModel{Model::Unknown};
     bool _deviceConnected{false};
     bool _scannerWanted{false};
     bool _automaticEarDetection{false};
+    bool _conversationalAwarenessEnabled{false};
+    uint8_t _conversationalAwarenessVolumePercent{40};
+    bool _personalizedVolumeEnabled{false};
+    bool _loudSoundReductionEnabled{false};
+    uint8_t _adaptiveTransparencyLevel{25};
+    std::optional<AAP::NoiseControlMode> _currentNoiseControlMode;
     uint64_t _requestedDeviceAddress{0};
     std::jthread _deviceLookupThread;
+
+    // AAP Manager for L2CAP protocol communication
+    AAP::Manager _aapMgr;
 
     // Declared last so that it is destroyed first: its destructor stops the watcher and waits
     // for in-flight callbacks, which reach `_stateMgr` and `_mutex` above.
@@ -199,6 +252,20 @@ private:
     void OnAdvWatcherStateChanged(
         Bluetooth::AdvertisementWatcher::State state, const std::optional<std::string> &optError);
 
+    // AAP callbacks
+    void OnNoiseControlModeNotification(AAP::NoiseControlMode mode);
+    void OnConversationalAwarenessStateChanged(AAP::ConversationalAwarenessState state);
+    void OnPersonalizedVolumeStateChanged(AAP::PersonalizedVolumeState state);
+    void OnLoudSoundReductionStateChanged(AAP::LoudSoundReductionState state);
+    void OnAdaptiveTransparencyLevelNotification(uint8_t level);
+    void OnSpeakingLevelChanged(AAP::SpeakingLevel level);
+    void OnEarDetectionChanged(AAP::EarStatus primary, AAP::EarStatus secondary);
+    void OnHeadTrackingData(AAP::HeadTrackingData data);
+    void OnAAPConnected();
+    void OnAAPDisconnected();
+    void SetupAAPCallbacks();
+    void ConnectAAP();
+
 Q_SIGNALS:
     void StateUpdated(const Core::AirPods::State &newState);
     void BoundDeviceUnavailable();
@@ -206,6 +273,12 @@ Q_SIGNALS:
     void LidToggled(bool opened);
     void ScannerAvailabilityChanged(bool available);
     void DeviceConnectionChanged(bool connected);
+    // Emitted from AAP callback threads; cross-thread receivers get the queued
+    // delivery Qt applies automatically.
+    void AapConnectionStateChangedSafely(bool connected);
+    // Payload is Core::AAP::ConnectFailure cast to int (registered metatypes
+    // stay free of AAP enums).
+    void AapConnectionFailedSafely(int failure);
 };
 
 std::vector<Core::Bluetooth::Device> GetDevices();

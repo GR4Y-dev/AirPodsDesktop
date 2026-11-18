@@ -31,7 +31,7 @@ Windows multimedia backend. Qt runtime DLLs must be deployed beside the executab
 | `APD_ENABLE_CONSOLE` | OFF | Console subsystem + `APD_ENABLE_CONSOLE` define, for diagnostics |
 | `APD_GENERATE_INSTALLER` | OFF | Runs CPack/NSIS post-build (needs NSIS installed) |
 | `APD_QT_DEPLOY` | ON | Runs `windeployqt` post-build |
-| `APD_GITHUB_OWNER` / `APD_GITHUB_REPOSITORY` | `SpriteOvO` / `AirPodsDesktop` | Repository the updater checks; set these for fork builds |
+| `APD_GITHUB_OWNER` / `APD_GITHUB_REPOSITORY` | `YimingZhanshen` / `AirPodsWindows` | Repository the updater checks; CI overrides these with the publishing repository |
 | `APD_BUILD_GIT_HASH` | — | Stamps the build hash into the log banner |
 
 Compiler quirks baked into `CMakeLists.txt`: `CMAKE_CXX_STANDARD 20` is remapped to `/std:c++latest`

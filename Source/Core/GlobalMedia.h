@@ -1,5 +1,5 @@
 //
-// AirPodsDesktop - AirPods Desktop User Experience Enhancement Program.
+// AirPodsWindows - AirPods Desktop User Experience Enhancement Program.
 // Copyright (C) 2021-2022 SpriteOvO
 //
 // This program is free software: you can redistribute it and/or modify
@@ -33,4 +33,20 @@ inline void Pause()
 {
     Controller::GetInstance().Pause();
 }
+
+inline void SetVolume(int percent)
+{
+    Controller::GetInstance().SetVolume(percent);
+}
+
+inline int GetVolume()
+{
+    return Controller::GetInstance().GetVolume();
+}
+
+inline void ClearVolumeReductionState()
+{
+    Controller::GetInstance().ClearVolumeReductionState();
+}
+
 } // namespace Core::GlobalMedia

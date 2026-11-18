@@ -1,5 +1,5 @@
 //
-// AirPodsDesktop - AirPods Desktop User Experience Enhancement Program.
+// AirPodsWindows - AirPods Desktop User Experience Enhancement Program.
 // Copyright (C) 2021-2022 SpriteOvO
 //
 // This program is free software: you can redistribute it and/or modify
@@ -31,7 +31,9 @@
 #include "Gui/TaskbarStatus.h"
 #include "Gui/TrayIcon.h"
 #include "Gui/Theme.h"
+#include "Gui/Widget/DriverStatusCard.h"
 #include "Core/AirPods.h"
+#include "Core/AAP.h"
 #include "Core/AutoStart.h"
 #include "Core/Bluetooth.h"
 #include "Core/GlobalMedia.h"
@@ -205,13 +207,19 @@ bool ApdApplication::Prepare(int argc, char *argv[])
     _quickConnect = std::make_unique<Core::QuickConnect::Controller>(_quickConnectBackend);
 
     _trayIcon = std::make_unique<Gui::TrayIcon>(
-        [this] { return GetCurrentLoadedLocaleIndex(); }, *_quickConnect);
+        [this] { return GetCurrentLoadedLocaleIndex(); }, *_quickConnect,
+        [this]() -> Core::AirPods::Manager & { return GetAirPodsManager(); });
     _taskbarStatus = std::make_unique<Gui::TaskbarStatus>();
     _mainWindow = std::make_unique<Gui::MainWindow>();
     _mainWindow->StartUpdateChecks();
     _lowAudioLatencyController = std::make_unique<Core::LowAudioLatency::Controller>();
     _autoStartService = Core::AutoStart::CreateAutoStartService();
     _airPodsManager = std::make_unique<Core::AirPods::Manager>(this);
+
+    // The tray icon built the settings window (and its driver status card)
+    // before the manager existed; hand the provider over now that it does.
+    _trayIcon->SetAirPodsManagerProvider(
+        [this]() -> Core::AirPods::Manager & { return GetAirPodsManager(); });
 
     qRegisterMetaType<Core::AirPods::State>("Core::AirPods::State");
 
@@ -282,6 +290,18 @@ void ApdApplication::ConnectAirPodsManager()
             emit mainWindow->HideSafely();
         }
     });
+    // Blueprint 1.3: surface AAP connection failures as a tray balloon with an
+    // actionable hint instead of a silent feature blackout.
+    connect(
+        manager, &Core::AirPods::Manager::AapConnectionFailedSafely, _trayIcon.get(),
+        [this](int failure) {
+            const auto hint = Gui::DriverStatusCard::FailureHint(
+                static_cast<Core::AAP::ConnectFailure>(failure));
+            if (!hint.isEmpty()) {
+                _trayIcon->ShowMessage(tr("ANC connection failed"), hint);
+            }
+        },
+        Qt::QueuedConnection);
 }
 
 void ApdApplication::ConnectGuiComponents()
@@ -412,6 +432,42 @@ void ApdApplication::OnLowAudioLatencyChanged(bool enable)
 void ApdApplication::OnAutomaticEarDetectionChanged(bool enable)
 {
     _airPodsManager->OnAutomaticEarDetectionChanged(enable);
+}
+
+void ApdApplication::OnConversationalAwarenessChanged(bool enable)
+{
+    _airPodsManager->OnConversationalAwarenessChanged(enable);
+}
+
+void ApdApplication::OnConversationalAwarenessVolumePercentChanged(uint8_t percent)
+{
+    _airPodsManager->OnConversationalAwarenessVolumePercentChanged(percent);
+}
+
+void ApdApplication::OnPersonalizedVolumeChanged(bool enable)
+{
+    _airPodsManager->OnPersonalizedVolumeChanged(enable);
+}
+
+void ApdApplication::OnLoudSoundReductionChanged(bool enable)
+{
+    _airPodsManager->OnLoudSoundReductionChanged(enable);
+}
+
+void ApdApplication::OnAdaptiveTransparencyLevelChanged(uint8_t level)
+{
+    _airPodsManager->OnAdaptiveTransparencyLevelChanged(level);
+}
+
+void ApdApplication::OnNoiseControlModeChanged(uint32_t mode)
+{
+    _airPodsManager->OnNoiseControlModeChanged(
+        static_cast<Core::AAP::NoiseControlMode>(mode));
+}
+
+Core::AirPods::Manager &ApdApplication::GetAirPodsManager()
+{
+    return *_airPodsManager;
 }
 
 void ApdApplication::OnRssiMinChanged(int16_t rssiMin)

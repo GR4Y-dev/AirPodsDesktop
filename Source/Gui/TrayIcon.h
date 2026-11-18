@@ -1,5 +1,5 @@
 //
-// AirPodsDesktop - AirPods Desktop User Experience Enhancement Program.
+// AirPodsWindows - AirPods Desktop User Experience Enhancement Program.
 // Copyright (C) 2021-2022 SpriteOvO
 //
 // This program is free software: you can redistribute it and/or modify
@@ -24,8 +24,11 @@
 #include <QTimer>
 #include <QMenu>
 #include <QAction>
+#include <QActionGroup>
+#include <QLabel>
 
 #include "../Core/AirPods.h"
+#include "../Core/AAP.h"
 #include "../Core/QuickConnect.h"
 #include "../Core/Update.h"
 #include "Base.h"
@@ -40,7 +43,8 @@ class TrayIcon : public QWidget
 
 public:
     explicit TrayIcon(
-        std::function<int()> getCurrentLocaleIndex, Core::QuickConnect::Controller &quickConnect);
+        std::function<int()> getCurrentLocaleIndex, Core::QuickConnect::Controller &quickConnect,
+        std::function<Core::AirPods::Manager &()> getAirPodsManager = {});
 
     template <class... ArgsT>
     inline void ShowMessage(ArgsT &&...args)
@@ -52,7 +56,11 @@ public:
     void Unavailable();
     void Disconnect();
     void Unbind();
+    // Forwards the application's AirPods manager to the settings window's
+    // driver status card; the application calls this after the manager exists.
+    void SetAirPodsManagerProvider(std::function<Core::AirPods::Manager &()> getAirPodsManager);
     void VersionUpdateAvailable(const Core::Update::ReleaseInfo &releaseInfo);
+    void UpdateNoiseControlMode(Core::AAP::NoiseControlMode mode);
     void ShowContextMenu(const QPoint &position);
 
 Q_SIGNALS:
@@ -73,6 +81,15 @@ private:
     QSystemTrayIcon *_tray = new QSystemTrayIcon{this};
     QMenu *_menu = new QMenu{this};
     QAction *_actionNewVersion = new QAction{tr("New version available!"), this};
+
+    // Noise Control Menu
+    QMenu *_noiseControlMenu = new QMenu{tr("Noise Control"), this};
+    QLabel *_noiseStatus = new QLabel;
+    QActionGroup *_noiseControlGroup = new QActionGroup{this};
+    QAction *_actionNoiseOff = new QAction{tr("Off"), this};
+    QAction *_actionNoiseCancellation = new QAction{tr("Noise Cancellation"), this};
+    QAction *_actionTransparency = new QAction{tr("Transparency"), this};
+    QAction *_actionAdaptive = new QAction{tr("Adaptive"), this};
     QAction *_actionLowAudioLatency = new QAction{tr("Low audio latency (may cause hiss)"), this};
     QAction *_actionSettings = new QAction{tr("Settings"), this};
     QAction *_actionAbout = new QAction{tr("About"), this};
@@ -83,13 +100,21 @@ private:
     std::optional<Core::AirPods::State> _airPodsState;
     std::optional<QString> _displayName;
     std::optional<Core::Update::ReleaseInfo> _updateReleaseInfo;
+    std::optional<Core::AAP::NoiseControlMode> _currentNoiseMode;
+    // Resolves the application's AirPods manager lazily so `apd_gui` stays free of a hard
+    // dependency on the application object (the unit tests link apd_gui without it).
+    std::function<Core::AirPods::Manager &()> _getAirPodsManager;
     std::optional<IconRenderState> _lastIconRenderState;
     Core::QuickConnect::Controller &_quickConnect;
     TrayActivationState _trayActivationState;
     QTimer _singleClickTimer{this};
+    QTimer _noiseRefreshTimer{this};
 
     void ShowMainWindow();
     void Repaint();
+    void SetupNoiseControlMenu();
+    void RefreshNoiseControl();
+    void UpdateNoiseControlMenuState();
     void ExecuteTrayActivation(TrayActivationAction action);
 
     static std::optional<QImage>
@@ -101,6 +126,7 @@ private:
     void OnIconClicked(QSystemTrayIcon::ActivationReason reason);
     void OnQuickConnectOutcome(Core::QuickConnect::Outcome outcome, const QString &deviceName);
     void OnTrayIconBatteryChanged(Core::Settings::TrayIconBatteryBehavior value);
+    void OnNoiseControlModeSelected(Core::AAP::NoiseControlMode mode);
     void OnLowAudioLatencyChanged(bool enabled);
 
 protected:
